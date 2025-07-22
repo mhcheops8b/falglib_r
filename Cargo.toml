@@ -1,0 +1,8 @@
+[package]
+name = "falglib"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# permlib = { path = "../permlib" }
+permlib = { git = "https://github.com/mhcheops8b/permlib_r.git" }
