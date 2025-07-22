@@ -465,61 +465,632 @@ pub fn expand_order_by_one_canonical_rec3(level:usize, rel_old: &Vec<Vec<usize>>
     }
 }
 
+fn rel_are_pair_antisymmetric(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>) -> bool {
+    let n = rel1.len();
 
-
-// def gen_quasi_order_from_dict(rel_old, n, vert_dict):
-//     m = len(rel_old)
-
-//     #init order table
-//     res = []
-//     for i in range(n):
-//         res.append([])
-//         for _ in range(n):
-//             res[i].append(0)
-
-//     for i in range(m):
-//         for j in range(m):
-//             if rel_old[i][j]:
-//                 for e in vert_dict[i]:
-//                     for f in vert_dict[j]:
-//                         res[e][f] = 1
-//     return res
-
-
-
-// def gen_quasi_orders_from_order_just_repr_set(rel_old, n):
-// m = len(rel_old)
-
-// if m >= n:
-//     return []
-
-// quasi_orders_repr = set()
-// for s in gen_sum(n - m, m):
-//     vert_dict = dict()
-//     n_idx = m
-//     for idx,v in enumerate(s):
-//         vert_dict[idx] = set({idx})
-//         for _ in range(v):
-//             vert_dict[idx].add(n_idx)
-//             n_idx+=1
+    for i in 0..n {
+        for j in 0.. n {
+            if rel1[i][j] == 1 && rel2[j][i] == 1 && i != j {
+                return false;
+            }
+        }
+    }
     
-//     #print(s, vert_dict) # debug
-//     genrel = gen_quasi_order_from_dict(rel_old, n, vert_dict)
-//     quasi_orders_repr.add(tuple(tuple(r) for r in find_canonical_rel_quasi_order_repr2_v4(genrel)))
+    true
+}
 
-// return quasi_orders_repr
-//def gen_sum(v, m):
-// """
-// Returns all possibilities how to obtain value `v` by a sum of `m` integer values.
-// """
-// if m <= 0:
-//     return []
-// if m == 1:
-//     return [[v]]
+fn rel_is_reflexive(rel: &Vec<Vec<usize>>) -> bool {
+    let n = rel.len();
 
-// res = []
-// for i in range(v+1):
-//     for e in gen_sum(v-i, m-1):            
-//         res.append([i] + e)
-// return res
+    for i in 0..n {
+        if rel[i][i] == 0 {
+            return false;
+        }
+    }
+    true
+}
 
+fn rel_is_antisymmetric(rel: &Vec<Vec<usize>>) -> bool {
+    let n = rel.len();
+
+    for i in 0..n {
+        for j in (i+1)..n {
+            if rel[i][j] == 1 && rel[j][i] == 1 {
+                return false;
+            }
+        }
+    }
+
+    true
+}
+
+fn rel_is_transitive(rel: &Vec<Vec<usize>>) -> bool {
+    let n = rel.len();
+
+    for i in 0..n {
+        for j in 0..n {
+            if rel[i][j] == 1 {
+                for k in 0..n {
+                    if rel[j][k] ==1 && rel[i][k] == 0 {
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    true
+}
+
+fn falg_test_f1(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg[x][falg[x][y]] != falg[x][y] {
+                if b_print {
+                   println!("x = {}, y = {}, F[{}][{}] = {}, F[{}][{}] != F[{}][{}]",
+                         x, y, x, y, falg[x][y], x, falg[x][y], x, y);
+                }
+                return false;
+            }
+        }
+    }
+
+    true
+}
+
+fn falg_test_f2(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg[falg[x][y]][y] != falg[x][y] {
+                if b_print {
+                   println!("x = {}, y = {}, F[{}][{}] = {}, F[{}][{}] != F[{}][{}]",
+                         x, y, x, y, falg[x][y], x, falg[x][y], x, y);
+                }
+                return false;
+            }
+        }
+    }
+
+    true
+}
+
+fn falg_test_f3(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg[x][y] == x {
+                for z in 0..n {
+                    if falg[y][z] == y && falg[x][z] != x {
+                        if b_print {
+                            println!("x = {}, y = {}, z = {}, F[{}][{}] = {}, F[{}][{}] = {}, F[{}][{}] = {}",
+                                x, y, z, x, y, falg[x][y], y, z, falg[y][z], x, z, falg[x][z]);
+
+                        }
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    true
+}
+
+fn falg_test_f4(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg[x][y] == y {
+                for z in 0..n {
+                    if falg[y][z] == z && falg[x][z] != z {
+                        if b_print {
+                            println!("x = {}, y = {}, z = {}, F[{}][{}] = {}, F[{}][{}] = {}, F[{}][{}] = {}",
+                                x, y, z, x, y, falg[x][y], y, z, falg[y][z], x, z, falg[x][z]);
+
+                        }
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    true
+}
+
+fn falg_test_f5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg[x][y] == x {
+                for z in 0..n {
+                    if falg[falg[x][z]][falg[y][z]] != falg[x][z] {
+                        if b_print {
+                            println!("x = {}, y = {}, z = {}", x, y, z);
+                        }
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    true
+}
+
+fn falg_test_f6(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg[x][y] == y {
+                for z in 0..n {
+                    if falg[falg[z][x]][falg[z][y]] != falg[z][y] {
+                        if b_print {
+                            println!("x = {}, y = {}, z = {}", x, y, z);
+                        }
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    true
+}
+
+fn falg_is_elem_left_annihilator(falg: &Vec<Vec<usize>>, elem: usize) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        if falg[elem][x] != elem {
+            return false;
+        }
+    }
+    true
+}
+
+fn falg_is_elem_right_annihilator(falg: &Vec<Vec<usize>>, elem: usize) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        if falg[x][elem] != elem {
+            return false;
+        }
+    }
+    true
+}
+
+fn falg_is_elem_left_identity(falg: &Vec<Vec<usize>>, elem: usize) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        if falg[elem][x] != x {
+            return false;
+        }
+    }
+    true
+}
+
+fn falg_is_elem_right_identity(falg: &Vec<Vec<usize>>, elem: usize) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        if falg[x][elem] != x {
+            return false;
+        }
+    }
+    true
+}
+
+fn falg_is_commutative(falg: &Vec<Vec<usize>>) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in (x+1)..n {
+            if falg[x][y] != falg[y][x] {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn falg_is_associative(falg: &Vec<Vec<usize>>) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            for z in 0..n {
+                if falg[falg[x][y]][z] != falg[x][falg[y][z]] {
+                    return false;
+                }
+            }
+        }
+    }
+    true
+}
+
+fn falg_associativity_problems(falg: &Vec<Vec<usize>>) -> Vec<String> {
+    let n = falg.len();
+
+    let mut res:Vec<String> = Vec::new();
+
+    for x in 0..n {
+        for y in 0..n {
+            for z in 0..n {
+                let v1 = falg[falg[x][y]][z];
+                let v2 = falg[x][falg[y][z]];
+                if v1 != v2 {
+                    res.push(format!("x = {}, y = {}, z = {}, F(F(x,y),z) = {}, F(x, F(y,z)) = {}",x, y, z, v1, v2));
+                }
+            }
+        }
+    }
+    res
+}
+
+fn falg_is_internal(falg: &Vec<Vec<usize>>) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg[x][y] != x && falg[x][y] != y {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+fn falg_transpose(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    let n = falg.len();
+
+    let mut trans_falg = allocate_vector(n);
+
+    for x in 0..n {
+        for y in 0..n {
+            trans_falg[x][y] = falg[y][x];
+        }
+    }
+    trans_falg
+}
+
+fn falg_is_less1(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
+    falg[x][y] == x
+}
+
+fn falg_is_less2(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
+    falg[y][x] == x
+}
+
+fn falg_set_u_xy(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> HashSet<usize> {
+    let n = falg.len();
+
+    let mut res_u_xy = HashSet::<usize>::new();
+
+    for q in 0..n {
+        if falg_is_less1(falg, q, y) && falg_is_less2(falg, q, x) {
+            res_u_xy.insert(q);
+        }
+    }
+    res_u_xy
+}
+
+fn rel_pair_set_u_xy(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>, x: usize, y:usize) -> HashSet<usize> {
+    let n = rel1.len();
+
+    let mut res_u_xy = HashSet::<usize>::new();
+
+    for q in 0..n {
+        if rel1[q][y] == 1 && rel2[q][x] == 1 {
+            res_u_xy.insert(q);
+        }
+    }
+    res_u_xy
+}
+
+fn falg_set_s1_x(falg: &Vec<Vec<usize>>, x: usize) -> HashSet<usize> {
+    let n = falg.len();
+
+    let mut res_s1_x = HashSet::<usize>::new();
+
+    for q in 0..n {
+        if falg_is_less1(falg, q, x) && falg_is_less1(falg, x, q) {
+            res_s1_x.insert(q);
+        }
+    }
+    res_s1_x
+}
+
+fn falg_set_s2_x(falg: &Vec<Vec<usize>>, x: usize) -> HashSet<usize> {
+    let n = falg.len();
+
+    let mut res_s2_x = HashSet::<usize>::new();
+
+    for q in 0..n {
+        if falg_is_less2(falg, q, x) && falg_is_less2(falg, x, q) {
+            res_s2_x.insert(q);
+        }
+    }
+    res_s2_x
+}
+
+// # rel_S1x, rel_S2x depends only on used rel
+fn rel_set_sn_x(rel: &Vec<Vec<usize>>, x: usize) -> HashSet<usize> {
+    let n = rel.len();
+
+    let mut res_sn_x = HashSet::<usize>::new();
+
+    for q in 0..n {
+        if rel[q][x] == 1 && rel[x][q] == 1 {
+            res_sn_x.insert(q);
+        }
+    }
+    res_sn_x
+}
+
+// x dominates y: if x <=_i y then y in Si(x)
+fn falg_x_dominates_y(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
+    if falg_is_less1(falg, x, y) && !falg_set_s1_x(falg, x).contains(&y) {
+        return false;
+    }
+    if falg_is_less2(falg, x, y) && !falg_set_s2_x(falg, x).contains(&y) {
+        return false;
+    }
+    true
+}
+
+fn rel_pair_x_dominates_y(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
+    if rel1[x][y] == 1 && !rel_set_sn_x(rel1, x).contains(&y) {
+        return false;
+    }
+    if rel2[x][y] == 1 && !rel_set_sn_x(rel2, x).contains(&y) {
+        return false;
+    }
+    true
+}
+
+fn falg_x_strictly_dominates_y(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
+    if falg_is_less1(falg, y, x) && !falg_set_s1_x(falg, x).contains(&y) {
+        return true;
+    }
+    if falg_is_less2(falg, y, x) && !falg_set_s2_x(falg, x).contains(&y) {
+        return true;
+    }
+    false
+}
+
+fn rel_pair_x_strictly_dominates_y(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
+    if rel1[y][x] == 1 && !rel_set_sn_x(rel1, x).contains(&y) {
+        return true;
+    }
+    if rel2[y][x] == 1 && !rel_set_sn_x(rel2, x).contains(&y) {
+        return true;
+    }
+    false
+}
+
+fn falg_set_s_xy(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> HashSet<usize> {
+    let n = falg.len();
+    
+    let mut res_set_s_xy = HashSet::<usize>::new();
+
+    let set_u_xy = falg_set_u_xy(falg, x, y);
+
+    for q in set_u_xy.iter() {
+        let mut b_dominates = true;
+
+        for u in set_u_xy.iter() {
+            if !falg_x_dominates_y(falg, *q, *u) {
+                b_dominates = false;
+                break;
+            }
+        }
+        if b_dominates {
+            res_set_s_xy.insert(*q);
+        }
+    }
+    res_set_s_xy
+}
+
+fn rel_pair_set_s_xy(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>, x: usize, y:usize) -> HashSet<usize> {
+    let n = rel1.len();
+    
+    let mut res_set_s_xy = HashSet::<usize>::new();
+
+    let set_u_xy = rel_pair_set_u_xy(rel1, rel2, x, y);
+
+    for q in set_u_xy.iter() {
+        let mut b_dominates = true;
+
+        for u in set_u_xy.iter() {
+            if !rel_pair_x_dominates_y(rel1, rel2, *q, *u) {
+                b_dominates = false;
+                break;
+            }
+        }
+        if b_dominates {
+            res_set_s_xy.insert(*q);
+        }
+    }
+    res_set_s_xy
+}
+
+fn falg_set_t_xy(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> HashSet<usize> {
+    if falg[x][y] == x {
+        return HashSet::from([x]);
+    }
+
+    if falg[x][y] == y {
+        return HashSet::from([y]);
+    }
+    return falg_set_s_xy(falg, x, y);
+}
+
+fn rel_pair_set_t_xy(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>, x: usize, y:usize) -> HashSet<usize> {
+    if rel1[x][y] == 1 {
+        return HashSet::from([x]);
+    }
+
+    if rel2[y][x] == 1 {
+        return HashSet::from([y]);
+    }
+    return rel_pair_set_s_xy(rel1, rel2, x, y);
+}
+
+
+
+fn rel_pair_az_relation(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
+    // x in S_1^y
+    if rel_set_sn_x(rel1, y).contains(&x) {
+        return true;
+    }
+    // x in S_2^y
+    if rel_set_sn_x(rel2, y).contains(&x) {
+        return true;
+    }
+    // exists k != x, y: x in S_1^k and y in S_2^k(x)
+    let n = rel1.len();
+    for k in 0..n {
+        if k != x && k != y && rel_set_sn_x(rel1, k).contains(&x) && rel_set_sn_x(rel2, k).contains(&y) {
+            return true;
+        }
+    }
+    // exists m != x, y: x in S_2^m and y in S_1^m(x)
+    for m in 0..n {
+        if m != x && m != y && rel_set_sn_x(rel1, m).contains(&y) && rel_set_sn_x(rel2, m).contains(&x) {
+            return true;
+        }
+    }
+    false
+}
+
+fn falg_test_cond_n1(falg: &Vec<Vec<usize>>) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0 .. n {
+            if x != y {
+                for z in 0..n {
+                    if x != z && y != z {
+                        let set_s_xyz = falg_set_s_xy(falg, falg[x][y], falg[y][z]);
+
+                        if set_s_xyz.len() != 1 {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    true
+}
+
+fn falg_test_cond_n2(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg[x][y] != x {
+                for z in 0..n {
+                    let s_xyz = falg_set_s_xy(falg, falg[x][y], falg[y][z]);
+
+                    if s_xyz.contains(&x) && s_xyz.contains(&falg[x][y]) {
+                        if b_print {
+                            println!("N2: x = {}, y = {}, z = {}", x, y, z);
+                            println!("    F(x,y) = {}, F(y,z) = {}, S_{{F(x,y),F(y,z)}} = {:?}", falg[x][y], falg[y][z], s_xyz);
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+fn falg_test_cond_n3(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for y in 0..n {
+        for z in 0..n {
+            if falg[y][z] != z {
+                for x in 0..n {
+                    let s_xyz = falg_set_s_xy(falg, falg[x][y], falg[y][z]);
+
+                    if s_xyz.contains(&z) && s_xyz.contains(&falg[y][z]) {
+                        if b_print {
+                            println!("N3: x = {}, y = {}, z = {}", x, y, z);
+                            println!("    F(y,z) = {},  F(x,y) = {}, S_{{F(x,y),F(y,z)}} = {:?}", falg[y][z], falg[x][y], s_xyz);
+                        }
+                        return true;
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+fn falg_test_cond_n4(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for x in 0..n {
+        for y in 0..n {
+            for yp in 0..n {
+                if falg[x][y] == falg[x][yp] {
+                    for z in 0..n {
+                        for zp in 0.. n {
+                            if z != zp && falg[y][z] == falg[yp][zp] {
+                                let u = falg[x][y];
+                                let v = falg[y][z];
+                                let s_uv = falg_set_s_xy(falg, u, v);
+                                if s_uv.contains(&z) && s_uv.contains(&zp) {
+                                    if b_print {
+                                        println!("N4: x = {}, y = {}, y' = {}, z' = {}, z' = {}", x, y, yp, z, zp);
+                                        println!("    F(x,y) = F(x,y') = {}, F(y,z) = F(y',z') = {}, S_u,v = {:?}", u, v, s_uv)
+                                    }
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    false
+}
+
+fn falg_test_cond_n5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+    let n = falg.len();
+
+    for z in 0..n {
+        for y in 0..n {
+            for yp in 0..n {
+                if falg[y][z] == falg[yp][z] {
+                    for x in 0..n {
+                        for xp in 0.. n {
+                            if x != xp && falg[x][y] == falg[xp][yp] {
+                                let u = falg[x][y];
+                                let v = falg[y][z];
+                                let s_uv = falg_set_s_xy(falg, u, v);
+                                if s_uv.contains(&x) && s_uv.contains(&xp) {
+                                    if b_print {
+                                        println!("N5: x = {}, x' = {}, y = {}, y' = {}, z = {}", x, xp, y, yp, z);
+                                        println!("     F(x,y) = F(x',y') = {}, F(y,z) = F(y',z) = {}, S_u,v = {:?}", u, v, s_uv)
+                                    }
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    false
+}
