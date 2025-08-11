@@ -71,7 +71,7 @@ pub fn parse_tuple(n: usize, myvec_str: &String) -> Vec<Vec<usize>> {
     return parsed_vec;
 }
 
-fn parse_vector(n: usize, myvec_str: &String) -> Vec<Vec<usize>> {
+pub fn parse_vector(n: usize, myvec_str: &String) -> Vec<Vec<usize>> {
     let mut parsed_vec = allocate_vector(n);
 
     let mut val:usize = 0;
