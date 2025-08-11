@@ -1239,8 +1239,9 @@ fn falg_test_cond_n5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
 }
 
 pub fn falg_isomorphic_image(perm: &Vec<usize>, falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
-    let mut res = Vec::<Vec<usize>>::new();
     let size = perm.len();
+    let mut res = allocate_vector(size);
+    
     for i in 0..size {
         for j in  0..size {
             res[perm[i]][perm[j]] = perm[falg[i][j]];
