@@ -71,6 +71,53 @@ pub fn parse_tuple(n: usize, myvec_str: &String) -> Vec<Vec<usize>> {
     return parsed_vec;
 }
 
+fn parse_vector(n: usize, myvec_str: &String) -> Vec<Vec<usize>> {
+    let mut parsed_vec = allocate_vector(n);
+
+    let mut val:usize = 0;
+    let mut was_num = false;
+    let mut row:usize = 0;
+    let mut col:usize = 0;
+    for l in myvec_str.chars() {
+        if l == ' ' || l == '\t' {
+            continue;
+        }
+        if l == '[' {
+        }
+        if l == ']' {
+            if was_num {
+                parsed_vec[row][col] = val;
+                was_num = false;
+            }
+            row += 1;
+            col = 0;
+        }
+
+        if l >= '0' && l <= '9' {
+            // println!("{l}");
+            if was_num {
+                val = 10*val + (l as usize) - ('0' as usize);
+            }
+            else {
+                was_num = true;
+                val = (l as usize) - ('0' as usize); 
+            }
+        }
+        if l == ',' {
+            if was_num {
+                // println!("({row},{col}) = {val}");
+                parsed_vec[row][col] = val;
+                col += 1;
+                was_num = false;
+                val = 0;
+            }
+        }
+    }
+    //println!("{parsed_vec:?}");
+    // println!("Level: {}", level);
+    return parsed_vec;
+}
+
 
 pub fn allocate_vector(n: usize) -> Vec<Vec<usize>> {
     let mut result_vec:Vec<Vec<usize>> = vec![];
@@ -199,6 +246,63 @@ fn is_greater_interp(aa1:&Vec<Vec<usize>>, aa2:&Vec<Vec<usize>>) -> bool {
     false
 }
 
+// strictly greater, if equal -> False
+fn rel_quasi_order_is_greater_rel(aa1:&Vec<Vec<usize>>, aa2:&Vec<Vec<usize>>) -> bool {
+    let n1 = aa1.len();
+
+    let mut idx_i = 0usize;
+    let mut idx_j = 0usize;
+
+    while idx_i < n1 && aa1[idx_i][idx_j] == aa2[idx_i][idx_j] {
+        if idx_j < n1 - 1 {
+            idx_j +=1;
+        }
+        else {
+            idx_i += 1;
+            idx_j  = 0;
+        }
+    }
+
+    if idx_i < n1 {
+        if aa1[idx_i][idx_j] > aa2[idx_i][idx_j] {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    false
+}
+
+// strictly lesser, if equal -> False
+fn rel_quasi_order_is_lesser_rel(aa1:&Vec<Vec<usize>>, aa2:&Vec<Vec<usize>>) -> bool {
+    let n1 = aa1.len();
+
+    let mut idx_i = 0usize;
+    let mut idx_j = 0usize;
+
+    while idx_i < n1 && aa1[idx_i][idx_j] == aa2[idx_i][idx_j] {
+        if idx_j < n1 - 1 {
+            idx_j +=1;
+        }
+        else {
+            idx_i += 1;
+            idx_j  = 0;
+        }
+    }
+
+    if idx_i < n1 {
+        if aa1[idx_i][idx_j] < aa2[idx_i][idx_j] {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+    false
+}
+
+
 // quasi order canonical maximal
 pub fn rel_quasi_order_find_can_max_repr(rel_qord:&Vec<Vec<usize>>) -> Vec<Vec<usize>> {
     // copy c_rel_qord
@@ -233,6 +337,42 @@ pub fn rel_quasi_order_find_can_max_repr(rel_qord:&Vec<Vec<usize>>) -> Vec<Vec<u
     }
 
     cmax_rel_qord_repr
+}
+
+// quasi order canonical maximal
+pub fn rel_quasi_order_find_can_min_repr(rel_qord:&Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    // copy c_rel_qord
+    let c_rel_qord =  find_canonical_quasi_order(rel_qord);
+
+    let n = c_rel_qord.len();
+    
+    let mut b_repr_cmin_rel_qord = false;
+
+    let mut perm = (0..n).into_iter().collect::<Vec<_>>();
+
+    let mut cmin_rel_qord_repr = allocate_vector(n);
+    loop {
+        if rel_quasi_order_perm_preserves_canonical_quasi_order(&c_rel_qord, &perm) {
+            let rel_qord_iso = rel_isomorphic_image(&c_rel_qord, &perm);
+            if !b_repr_cmin_rel_qord {
+                cmin_rel_qord_repr = rel_qord_iso;
+                b_repr_cmin_rel_qord = true;
+            }
+            else {
+                // compare new representation
+                if rel_quasi_order_is_lesser_rel(&rel_qord_iso, &cmin_rel_qord_repr) {
+                    cmin_rel_qord_repr = rel_qord_iso;
+                }
+            }
+
+        }
+        
+        if !permlib::next_perm(&mut perm, n) {
+            break;
+        }
+    }
+
+    cmin_rel_qord_repr
 }
 
 // quasi order canonical maximal
