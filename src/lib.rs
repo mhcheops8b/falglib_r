@@ -150,8 +150,11 @@ fn rel_quasi_order_perm_preserves_canonical_quasi_order(rel_qord:&Vec<Vec<usize>
 
     for i in 0..n {
         for j in 0..n {
-            if i!=j && rel_qord[perm[i]][perm[j]] == 1 && rel_qord[perm[j]][perm[i]] != 1 && perm[i] > perm[j] {
-                return false;
+            if perm[i] > perm[j] {
+                // if rel_qord[perm[i]][perm[j]] == 1 && rel_qord[perm[j]][perm[i]] != 1 {
+                if rel_qord[i][j] == 1 && rel_qord[j][i] != 1 {
+                    return false;
+                }
             }
         }
     }
