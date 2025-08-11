@@ -1237,3 +1237,47 @@ fn falg_test_cond_n5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     }
     false
 }
+
+pub fn falg_isomorphic_image(perm: &Vec<usize>, falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    let mut res = Vec::<Vec<usize>>::new();
+    let size = perm.len();
+    for i in 0..size {
+        for j in  0..size {
+            res[perm[i]][perm[j]] = perm[falg[i][j]];
+        }
+    }
+
+    res
+}
+
+pub fn falg_isomorphic_expand(falg: &Vec<Vec<usize>>) -> (HashSet<Vec<Vec<usize>>>, HashMap<Vec<usize>, Vec<Vec<usize>>>) {
+    let size = falg.len();
+    let mut perm = Vec::<usize>::new();
+    for i in 0..size {
+        perm.push(i);
+    }
+
+    let mut res: HashSet<Vec<Vec<usize>>> = HashSet::new();
+    let mut permiso: HashMap<Vec<usize>, Vec<Vec<usize>>> = HashMap::new();
+
+    let mut old_size =res.len();
+    loop {
+
+        let iso_image = falg_isomorphic_image(&perm, &falg);
+
+        res.insert(iso_image.clone());
+
+        if old_size != res.len() {
+            // println!("\tNew {:?}", iso_image);
+            permiso.insert(perm.clone(), iso_image);
+
+            old_size = res.len();
+        }
+      
+        if !permlib::next_perm(&mut perm, size) {
+            break;
+        }
+    }
+
+    (res, permiso)
+}
