@@ -608,7 +608,7 @@ pub fn expand_order_by_one_canonical_rec3(level:usize, rel_old: &Vec<Vec<usize>>
     }
 }
 
-fn rel_are_pair_antisymmetric(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>) -> bool {
+pub fn rel_are_pair_antisymmetric(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>) -> bool {
     let n = rel1.len();
 
     for i in 0..n {
@@ -621,6 +621,40 @@ fn rel_are_pair_antisymmetric(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>) ->
     
     true
 }
+
+pub fn rel_isomorphic_expand(qord: &Vec<Vec<usize>>) -> (HashSet<Vec<Vec<usize>>>, HashMap<Vec<usize>, Vec<Vec<usize>>>) {
+    let size = qord.len();
+    let mut perm = Vec::<usize>::new();
+    for i in 0..size {
+        perm.push(i);
+    }
+
+    let mut res: HashSet<Vec<Vec<usize>>> = HashSet::new();
+    let mut permiso: HashMap<Vec<usize>, Vec<Vec<usize>>> = HashMap::new();
+
+    let mut old_size =res.len();
+    loop {
+
+        let iso_image = rel_isomorphic_image(&qord, &perm);
+
+        res.insert(iso_image.clone());
+
+        if old_size != res.len() {
+            // println!("\tNew {:?}", iso_image);
+            permiso.insert(perm.clone(), iso_image);
+
+            old_size = res.len();
+        }
+      
+        if !permlib::next_perm(&mut perm, size) {
+            break;
+        }
+    }
+
+    (res, permiso)
+}
+
+
 
 fn rel_is_reflexive(rel: &Vec<Vec<usize>>) -> bool {
     let n = rel.len();
@@ -784,6 +818,15 @@ fn falg_test_f6(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     true
 }
 
+pub fn falg_all_tests_no_print(falg: &Vec<Vec<usize>>) -> bool {
+    falg_test_f3(falg, false) &&
+    falg_test_f4(falg, false) &&
+    falg_test_f5(falg, false) &&
+    falg_test_f6(falg, false) &&
+    falg_test_f1(falg, false) &&
+    falg_test_f2(falg, false)
+}
+
 fn falg_is_elem_left_annihilator(falg: &Vec<Vec<usize>>, elem: usize) -> bool {
     let n = falg.len();
 
@@ -888,7 +931,7 @@ fn falg_is_internal(falg: &Vec<Vec<usize>>) -> bool {
     true
 }
 
-fn falg_transpose(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+pub fn falg_transpose(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
     let n = falg.len();
 
     let mut trans_falg = allocate_vector(n);
@@ -1238,7 +1281,7 @@ fn falg_test_cond_n5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     false
 }
 
-pub fn falg_isomorphic_image(perm: &Vec<usize>, falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+pub fn falg_isomorphic_image(falg: &Vec<Vec<usize>>, perm: &Vec<usize>) -> Vec<Vec<usize>> {
     let size = perm.len();
     let mut res = allocate_vector(size);
     
@@ -1264,7 +1307,7 @@ pub fn falg_isomorphic_expand(falg: &Vec<Vec<usize>>) -> (HashSet<Vec<Vec<usize>
     let mut old_size =res.len();
     loop {
 
-        let iso_image = falg_isomorphic_image(&perm, &falg);
+        let iso_image = falg_isomorphic_image(&falg, &perm);
 
         res.insert(iso_image.clone());
 
@@ -1281,4 +1324,936 @@ pub fn falg_isomorphic_expand(falg: &Vec<Vec<usize>>) -> (HashSet<Vec<Vec<usize>
     }
 
     (res, permiso)
+}
+
+pub fn falg_init(size: usize) -> Vec<Vec<usize>> {
+    let mut falg_res = Vec::<Vec<usize>>::new();
+
+    for x in 0..size {
+        falg_res.push(Vec::<usize>::new());
+        for y in 0..size {
+            if x == y {
+                falg_res[x].push(x);
+            }
+            else {
+                falg_res[x].push(0);
+            }
+        }
+    }
+    falg_res
+}
+
+// based on generate_As_with_ords3
+pub fn falg_generate_with_qords(qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>) -> bool {
+    let n = qord1.len();
+    let mut falg = falg_init(n);
+    let mut b_filled_arr = Vec::<Vec<bool>>::new();
+    // init b_filled_arr
+    for x in 0..n {
+        b_filled_arr.push(Vec::<bool>::new());
+        for y in 0..n {
+            if x == y {
+                b_filled_arr[x].push(true);
+            }
+            else {
+                b_filled_arr[x].push(false);
+            }
+        }
+    }
+    // quasi-order induced fillings
+    // x <=_1 y, iff A[x][y] == x
+    // x <=_2 y, iff A[y][x] == x
+    for x in 0..n {
+        for y in 0..n {
+            if x != y {
+                if qord1[x][y] == 1 {
+                    if !b_filled_arr[x][y] {
+                        falg[x][y] = x;
+                        b_filled_arr[x][y] = true;
+                    }
+                    else {
+                        if falg[x][y] != x {
+                            // eprintln!("HH1");
+                            return false;
+                        }
+                    }
+                }
+                if qord2[x][y] == 1 {
+                    if !b_filled_arr[y][x] {
+                        falg[y][x] = x;
+                        b_filled_arr[y][x] = true;
+                    }
+                    else {
+                        if falg[y][x] != x {
+                            // eprintln!("HH2");
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // F5 consequence x <=_1 y => A[ A[x][z] ][ A[y][z]] = A[x][z] <=> A[x][z] <=_1 A[y][z]
+    // for z = x: x <=_1 A[y][x]
+    // F6 consequence x <=_2 y => A[z][x] <=_2 A[z][y]
+    // for z = x: x  <=_2 A[x][y]
+    for x in 0..n {
+        for y in 0..n {
+            if x != y {
+                if b_filled_arr[x][y] && b_filled_arr[y][x] {
+                    if qord1[x][y] == 1 && qord1[x][falg[y][x]] != 1 {
+                        // eprintln!("HH3");
+                        return false;
+                    }
+                    if qord2[x][y] == 1 && qord2[x][falg[x][y]] != 1 {
+                        // eprintln!("HH4");
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    let mut cand_idx = 0usize;
+    let mut missing_cnt = 0usize;
+    let mut cands_map = HashMap::<usize, HashSet<usize>>::new();
+    let mut pairs_map = HashMap::<usize, (usize, usize)>::new();
+    let mut pairs_inv_map = HashMap::<(usize, usize), usize>::new();
+    for x in 0..n {
+        for y in 0..n {
+            if x != y {
+                if !b_filled_arr[x][y] {
+                    missing_cnt += 1;
+                    let mut fill_candidates = HashSet::<usize>::new();
+
+                    // Assumption q = A[x][y], 
+                    // since x !<=_1 y and y !<=_2 x
+                    // A[x][y] != x, y
+                    for q in 0..n {
+                        // F1: A[x][y] <=_2 x
+                        if qord2[q][x] == 1 {
+                            if q != x {
+                                fill_candidates.insert(q);
+                            }
+                        }
+                        // F2: A[x][y] <=_1 y
+                        if qord1[q][y] == 1 {
+                            if q != y {
+                                fill_candidates.insert(q);
+                            }
+                        }
+                    }
+                    let fc_size = fill_candidates.len();
+                    // no candidates to fill (x,y)
+                    if fc_size == 0 {
+                        // eprintln!("No candidates for ({x}, {y})");
+                        return false;
+                    }
+                    if fc_size == 1 {
+                        if let Some(&c) = fill_candidates.iter().next() {
+                            falg[x][y] = c;
+                            b_filled_arr[x][y] = true;
+                            missing_cnt -= 1;
+                        }
+                    }
+                    else {
+                        cands_map.insert(cand_idx, fill_candidates);
+                        pairs_map.insert(cand_idx, (x,y));
+                        pairs_inv_map.insert((x,y), cand_idx);
+                    }
+                }
+                cand_idx +=1;
+            }
+        }
+    }
+    if missing_cnt == 0 {
+        if falg_all_tests_no_print(&falg) {
+            println!("{:?}", falg);
+        }
+    }
+    else {
+        // eprintln!("missing: {}", missing_cnt);
+        // eprintln!("candidates: {cands_map:?}");
+        // eprintln!("pairs: {pairs_map:?}");
+        // eprintln!("inv pairs: {pairs_inv_map:?}");
+        let mut key_arr = pairs_map.keys().map(|&x| x).collect::<Vec<_>>();
+        key_arr.sort();
+        // eprintln!("map keys: {key_arr:?}");
+        falg_fill_missing_v2(0, &key_arr, &cands_map, &pairs_map, &pairs_inv_map, &mut falg, &mut b_filled_arr);
+    }
+    true
+}
+
+// no speculative tests
+pub fn falg_fill_missing_v0(cur_idx:usize, key_arr:&Vec<usize>, cands_map: &HashMap<usize, HashSet<usize>>, pairs_map: &HashMap<usize, (usize, usize)>, pairs_inv_map: &HashMap<(usize, usize), usize>, part_falg: &mut Vec<Vec<usize>>, part_b_filled_arr: &mut Vec<Vec<bool>>) {
+    if cur_idx == cands_map.len() {
+        // test conditions for falg
+        if falg_all_tests_no_print(part_falg) {
+            println!("{:?}", part_falg);
+        }
+    }
+    else {
+        let key_idx = key_arr[cur_idx];
+        let cur_cands = cands_map.get(&key_idx).unwrap();
+        let (cur_x, cur_y) = pairs_map.get(&key_idx).unwrap();
+        for c in cur_cands {
+            // no tests
+            part_falg[*cur_x][*cur_y] = *c;
+            part_b_filled_arr[*cur_x][*cur_y] = true;
+            falg_fill_missing_v0(cur_idx + 1, key_arr, cands_map, pairs_map, pairs_inv_map, part_falg, part_b_filled_arr);
+            part_falg[*cur_x][*cur_y] = 0;
+            part_b_filled_arr[*cur_x][*cur_y] = false;
+        }
+    }
+
+}
+
+// with speculative tests
+// test forced rules
+// c = A[x][y]
+// F1: F(x, F(x,c)) = F(x,c) = c
+pub fn falg_fill_missing_v1(cur_idx:usize, key_arr: &Vec<usize>, cands_map: &HashMap<usize, HashSet<usize>>, pairs_map: &HashMap<usize, (usize, usize)>, pairs_inv_map: &HashMap<(usize, usize), usize>, part_falg: &mut Vec<Vec<usize>>, part_b_filled_arr: &mut Vec<Vec<bool>>) {
+    if cur_idx == cands_map.len() {
+        // test conditions for falg
+        if falg_all_tests_no_print(part_falg) {
+            println!("{:?}", part_falg);
+        }
+    }
+    else {
+        let key_idx = key_arr[cur_idx];
+        let cur_cands = cands_map.get(&key_idx).unwrap();
+        let (cur_x, cur_y) = *pairs_map.get(&key_idx).unwrap();
+        for &c in cur_cands {
+            // c = F(x,y)
+            // F1: F(x, F(x,c)) = F(x,c) = c
+            if part_b_filled_arr[cur_x][c] && part_falg[cur_x][c] != c {
+                continue;
+            }
+            // F2: F(F(c,y),y) = F(c,y) = c
+            if part_b_filled_arr[c][cur_y] && part_falg[c][cur_y] != c {
+                continue;
+            }
+            if !part_b_filled_arr[cur_x][c] {
+                let p_idx = pairs_inv_map.get(&(cur_x, c)).expect("no inv index");
+                let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                if !cand_set.contains(&c) {
+                    continue;
+                }
+            }
+            if !part_b_filled_arr[c][cur_y] {
+                let p_idx = pairs_inv_map.get(&(c, cur_y)).expect("no inv index");
+                let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                if !cand_set.contains(&c) {
+                    continue;
+                }
+            }
+            // F5: F(y, x) = y =>  F(y, F(x,y)) = y
+            if part_b_filled_arr[cur_y][cur_x] && part_falg[cur_y][cur_x] == cur_y {
+                if part_b_filled_arr[cur_y][c] && part_falg[cur_y][c] != cur_y {
+                    continue;
+                }
+                if !part_b_filled_arr[cur_y][c] {
+                    let p_idx = pairs_inv_map.get(&(cur_y, c)).expect("no inv index");
+                    let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                    if !cand_set.contains(&cur_y) {
+                        continue;
+                    }
+
+                }
+            }
+            // F6: F(y, x) = x =>  F( F(x,y), x) = x
+            if part_b_filled_arr[cur_y][cur_x] && part_falg[cur_y][cur_x] == cur_x {
+                if part_b_filled_arr[c][cur_x] && part_falg[c][cur_x] != cur_x {
+                    continue;
+                }
+                if !part_b_filled_arr[c][cur_x] {
+                    let p_idx = pairs_inv_map.get(&(c, cur_x)).expect("no inv index");
+                    let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                    if !cand_set.contains(&cur_x) {
+                        continue;
+                    }
+                }
+            }
+            // F5_2: t <=_1 x ==> F(t,y) <=_1 F(x,y) = c
+            // F5_2: x <=_1 t ==> c = F(x,y) <=_1 F(t,y)
+            // TODO
+
+            // F6_1: t <=_2 y ==> F(x,t) <=_2 F(x,y) = c
+            // F6_2: y <=_2 t ==> c = F(x,y) <=_2 F(x,t)
+            // TODO
+            part_falg[cur_x][cur_y] = c;
+            part_b_filled_arr[cur_x][cur_y] = true;
+            falg_fill_missing_v1(cur_idx + 1, key_arr, cands_map, pairs_map, pairs_inv_map, part_falg, part_b_filled_arr);
+            part_falg[cur_x][cur_y] = 0;
+            part_b_filled_arr[cur_x][cur_y] = false;
+        }
+    }
+
+}
+
+
+pub fn falg_fill_missing_v2(cur_idx:usize, key_arr: &Vec<usize>, cands_map: &HashMap<usize, HashSet<usize>>, pairs_map: &HashMap<usize, (usize, usize)>, pairs_inv_map: &HashMap<(usize, usize), usize>, part_falg: &mut Vec<Vec<usize>>, part_b_filled_arr: &mut Vec<Vec<bool>>) {
+    if cur_idx == cands_map.len() {
+        // test conditions for falg
+        if falg_all_tests_no_print(part_falg) {
+            println!("{:?}", part_falg);
+        }
+    }
+    else {
+        let key_idx = key_arr[cur_idx];
+        let cur_cands = cands_map.get(&key_idx).unwrap();
+        let (cur_x, cur_y) = *pairs_map.get(&key_idx).unwrap();
+        if !part_b_filled_arr[cur_x][cur_y] {
+            for &c in cur_cands {
+                let mut to_fill_map = HashMap::<(usize,usize),usize>::new();
+                // c = F(x,y)
+                // F1: F(x, F(x,c)) = F(x,c) = c
+                if part_b_filled_arr[cur_x][c] && part_falg[cur_x][c] != c {
+                    continue;
+                }
+                // F2: F(F(c,y),y) = F(c,y) = c
+                if part_b_filled_arr[c][cur_y] && part_falg[c][cur_y] != c {
+                    continue;
+                }
+                if !part_b_filled_arr[cur_x][c] {
+                    let p_idx = pairs_inv_map.get(&(cur_x, c)).expect("no inv index");
+                    let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                    if !cand_set.contains(&c) {
+                        continue;
+                    }
+                    else {
+                        to_fill_map.insert((cur_x, c), c);
+                    }
+                }
+                if !part_b_filled_arr[c][cur_y] {
+                    let p_idx = pairs_inv_map.get(&(c, cur_y)).expect("no inv index");
+                    let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                    if !cand_set.contains(&c) {
+                        continue;
+                    }
+                    else {
+                        to_fill_map.insert((c, cur_y), c);
+                    }
+                }
+                // F5: F(y, x) = y =>  F(y, F(x,y)) = y
+                if part_b_filled_arr[cur_y][cur_x] && part_falg[cur_y][cur_x] == cur_y {
+                    if part_b_filled_arr[cur_y][c] && part_falg[cur_y][c] != cur_y {
+                        continue;
+                    }
+                    if !part_b_filled_arr[cur_y][c] {
+                        let p_idx = pairs_inv_map.get(&(cur_y, c)).expect("no inv index");
+                        let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                        if !cand_set.contains(&cur_y) {
+                            continue;
+                        }
+                        else {
+                            to_fill_map.insert((cur_y, c), cur_y);
+                        }
+                    }
+                }
+                // F6: F(y, x) = x =>  F( F(x,y), x) = x
+                if part_b_filled_arr[cur_y][cur_x] && part_falg[cur_y][cur_x] == cur_x {
+                    if part_b_filled_arr[c][cur_x] && part_falg[c][cur_x] != cur_x {
+                        continue;
+                    }
+                    if !part_b_filled_arr[c][cur_x] {
+                        let p_idx = pairs_inv_map.get(&(c, cur_x)).expect("no inv index");
+                        let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                        if !cand_set.contains(&cur_x) {
+                            continue;
+                        }
+                        else {
+                            to_fill_map.insert((c, cur_x), cur_x);
+                        }
+                    }
+                }
+                // F5_2: t <=_1 x ==> F(t,y) <=_1 F(x,y) = c
+                // F5_2: x <=_1 t ==> c = F(x,y) <=_1 F(t,y)
+                // TODO
+
+                // F6_1: t <=_2 y ==> F(x,t) <=_2 F(x,y) = c
+                // F6_2: y <=_2 t ==> c = F(x,y) <=_2 F(x,t)
+                // TODO
+                part_falg[cur_x][cur_y] = c;
+                part_b_filled_arr[cur_x][cur_y] = true;
+                let mut b_error = false;
+                for (&k,&v) in to_fill_map.iter() {
+                    if !part_b_filled_arr[k.0][k.1] {
+                        part_falg[k.0][k.1] = v;
+                        part_b_filled_arr[k.0][k.1] = true;
+                    }
+                    else {
+                        if part_falg[k.0][k.1] != v {
+                            b_error = true;
+                            break;
+                        }
+
+                    }
+                }
+                if b_error {
+                    continue; 
+                }
+                falg_fill_missing_v2(cur_idx + 1, key_arr, cands_map, pairs_map, pairs_inv_map, part_falg, part_b_filled_arr);
+                part_falg[cur_x][cur_y] = 0;
+                part_b_filled_arr[cur_x][cur_y] = false;
+                for (k,v) in to_fill_map {
+                    if part_b_filled_arr[k.0][k.1] {
+                        part_falg[k.0][k.1] = 0;
+                        part_b_filled_arr[k.0][k.1] = false;
+                    }
+                }
+            }
+        }
+        else {
+            falg_fill_missing_v2(cur_idx + 1, key_arr, cands_map, pairs_map, pairs_inv_map, part_falg, part_b_filled_arr);
+        }
+    }
+
+}
+
+
+
+//             # F5_2: t <=_1 x ==> F(t,y) <=_1 F(x,y) = c
+//             # F5_2: x <=_1 t ==> c = F(x,y) <=_1 F(t,y)
+//             b_problem = False
+//             n = len(qord1)
+//             for t in range(n):
+//                 if t != x:
+//                     if qord1[t][x] == 1:
+//                         if b_arr[t][y] and qord1[AA[t][y]][c] == 0:
+//                             b_problem = True
+//                             break
+//                         if not b_arr[t][y]: 
+//                             b_found = False
+//                             for s in cands[get_inv_key(n, t, y)]:
+//                                 if qord1[s][c] == 1:
+//                                     b_found = True
+//                                     break
+//                             if not b_found:
+//                                 b_problem = True
+//                                 break
+//                     if qord1[x][t] == 1:
+//                         if b_arr[t][y] and qord1[c][AA[t][y]] == 0:
+//                             b_problem = True
+//                             break
+//                         if not b_arr[t][y]: 
+//                             b_found = False
+//                             for s in cands[get_inv_key(n, t, y)]:
+//                                 if qord1[c][s] == 1:
+//                                     b_found = True
+//                                     break
+//                             if not b_found:
+//                                 b_problem = True
+//                                 break
+
+
+
+
+// def fill_missing_rec4(cur_idx, cands, key_map, AA, b_arr, qord1, qord2, res_AAs, res_msgs, debug_print = False, strcallback=None, *args):
+//     global g_tested_filled, g_success
+//     global g_ts
+//     global g_te
+    
+//     #print("HERE", file=sys.stderr)
+//     if cur_idx >= len(cands):
+//         g_tested_filled += 1
+//         if g_tested_filled % 1_000_000 == 0:
+//             g_te = time.perf_counter()
+//             print("State: (", end="",file=sys.stderr)
+//             b_first=True
+//             for k in cands.keys():
+//                 if not b_first:
+//                     print(", ", end="", file=sys.stderr)
+//                 else:
+//                     b_first = False
+//                 print(AA[ key_map[k][0] ][key_map[k][1]], end="", file=sys.stderr)
+//             print(")", file=sys.stderr)
+//             print("Time: {} s".format(g_te - g_ts), file=sys.stderr)
+//             g_ts = g_te
+
+//         if just_test(AA):
+//         #b1 = test_F1(AA, True)
+//         #b2 = test_F2(AA, True)
+//         #b3 = test_F3(AA, True)
+//         #b4 = test_F4(AA, True)
+//             g_success += 1
+//             msg = ""
+//             if strcallback:
+//                 msg = strcallback(*args)
+
+//             print(AA, '#', msg, flush=True, file=sys.stderr)
+//             res_AAs.append(AA)
+//             res_msgs.append(msg)
+//         #exit()
+//     else:
+//         #print("DEBUG: {}/{}".format(cur_idx, len(cands)), file=sys.stderr)
+//         cur_key = list(cands.keys())[cur_idx]
+//         x = key_map[cur_key][0]
+//         y = key_map[cur_key][1]
+//         n = len(AA)
+//         b_arr[x][y] = True
+//         for c in cands[cur_key]:
+//             #if cur_idx == 0:
+//             #    print(c, file=sys.stderr)
+//             AA[x][y] = c
+//             # test forced rules
+//             # F1: F(x, F(x,c)) = F(x,c)
+//             if b_arr[x][c] and AA[x][c] != c:
+//                 continue
+//             # F2: F(F(c,y),y) = F(c,y)
+//             if b_arr[c][y] and AA[c][y] != c:
+//                 continue
+//             if not b_arr[x][c]:
+//                 #print(get_inv_key(n, x, c))
+//                 #print("x = {}, c= {}".format(x, c))
+//                 #print_partial(AA, b_arr)
+//                 if c not in cands[get_inv_key(n, x, c)]:
+//                     continue
+//             if not b_arr[c][y]:
+//                 #print(get_inv_key(n, c, y))
+//                 #print("c = {}, y= {}".format(c, y))
+//                 #print_partial(AA, b_arr)
+//                 if c not in cands[get_inv_key(n, c, y)]:
+//                     continue
+//             # F5: F[y][x] == y and F(y, F(x,y)) != y
+//             if b_arr[y][x] and AA[y][x] == y:
+//                 if b_arr[y][AA[x][y]] and AA[y][AA[x][y]] != y:
+//                     #print("F5HERE", file=sys.stderr)
+//                     continue
+//                 # AA[x][y] = c
+//                 if not b_arr[y][AA[x][y]] and y not in cands[get_inv_key(n, y, c)]:
+//                     #print("F5-2HERE", file=sys.stderr)
+//                     continue
+//             # F6: F[y][x] == x and F(F(x,y), x) != x
+//             if b_arr[y][x] and AA[y][x] == x:
+//                 if b_arr[AA[x][y]][x] and AA[AA[x][y]][x] != x:
+//                     #print("F6HERE", file=sys.stderr)
+//                     continue
+//                 # AA[x][y] = c
+//                 if not b_arr[AA[x][y]][x] and x not in cands[get_inv_key(n, c, x)]:
+//                     #print("F6-2HERE", file=sys.stderr)
+//                     continue
+
+//             # F5_2: t <=_1 x ==> F(t,y) <=_1 F(x,y) = c
+//             # F5_2: x <=_1 t ==> c = F(x,y) <=_1 F(t,y)
+//             b_problem = False
+//             n = len(qord1)
+//             for t in range(n):
+//                 if t != x:
+//                     if qord1[t][x] == 1:
+//                         if b_arr[t][y] and qord1[AA[t][y]][c] == 0:
+//                             b_problem = True
+//                             break
+//                         if not b_arr[t][y]: 
+//                             b_found = False
+//                             for s in cands[get_inv_key(n, t, y)]:
+//                                 if qord1[s][c] == 1:
+//                                     b_found = True
+//                                     break
+//                             if not b_found:
+//                                 b_problem = True
+//                                 break
+//                     if qord1[x][t] == 1:
+//                         if b_arr[t][y] and qord1[c][AA[t][y]] == 0:
+//                             b_problem = True
+//                             break
+//                         if not b_arr[t][y]: 
+//                             b_found = False
+//                             for s in cands[get_inv_key(n, t, y)]:
+//                                 if qord1[c][s] == 1:
+//                                     b_found = True
+//                                     break
+//                             if not b_found:
+//                                 b_problem = True
+//                                 break
+
+//             if b_problem:
+//                 continue
+
+//             # F6_1: t <=_2 y ==> F(x,t) <=_2 F(x,y) = c
+//             # F5_2: y <=_2 t ==> c = F(x,y) <=_2 F(x,t)
+//             b_problem = False            
+//             for t in range(n):
+//                 if t != x:
+//                     if qord2[t][y] == 1:
+//                         if b_arr[x][t] and qord2[AA[x][t]][c] == 0:
+//                             b_problem = True
+//                             break
+//                         if not b_arr[x][t]: 
+//                             b_found = False
+//                             for s in cands[get_inv_key(n, x, t)]:
+//                                 if qord2[s][c] == 1:
+//                                     b_found = True
+//                                     break
+//                             if not b_found:
+//                                 b_problem = True
+//                                 break
+//                     if qord2[y][t] == 1:
+//                         if b_arr[x][t] and qord2[c][AA[x][t]] == 0:
+//                             b_problem = True
+//                             break
+//                         if not b_arr[x][t]: 
+//                             b_found = False
+//                             for s in cands[get_inv_key(n, x, t)]:
+//                                 if qord1[c][s] == 1:
+//                                     b_found = True
+//                                     break
+//                             if not b_found:
+//                                 b_problem = True
+//                                 break
+
+//             if b_problem:
+//                 continue
+
+//             #if test_part_F3(AA, b_arr) and test_part_F4(AA, b_arr) and \
+//             #    test_part_F5(AA, b_arr) and test_part_F6(AA, b_arr):
+//             fill_missing_rec4(cur_idx + 1, cands, key_map, AA, b_arr, qord1, qord2, res_AAs, res_msgs, debug_print, strcallback, *args)
+//         b_arr[x][y] = False
+
+
+
+
+
+
+//      idx = 0
+//         for x in range(n):
+//             for y in range(n):
+//                 if x != y:
+//                     if not b_arr[x][y]:
+//                         #print("x = {}, y = {}".format(x,y))
+//                         is_missing = True
+//                         # get candidates
+//                         candidates=set()
+//                         for q in range(n):
+//                             # F1: A[x][y] <=_2 x
+//                             if rel2[q][x]:
+//                                 if debug_print:
+//                                     print("Adding candidate for ({}, {}) due F1: A[x][y] <=_2 x: {}".format(x,y,q), file=sys.stderr)
+//                                 candidates.add(q)
+//                             # F2: A[x][y] <=_1 y    
+//                             if rel1[q][y]:
+//                                 if debug_print:
+//                                     print("Adding candidate for ({}, {}) due F2: A[x][y] <=_1 y: {}".format(x,y,q), file=sys.stderr)
+//                                 candidates.add(q)
+//                         # candidates = set(range(n))
+//                         if rel1[x][y] == 0:
+//                             if debug_print:
+//                                 print("Removing candidate for ({}, {}) since x !<=_1 y ==> A[x][y] != x: {}".format(x,y,x), file=sys.stderr)
+//                             candidates.remove(x)
+//                         if rel2[y][x] == 0:
+//                             if debug_print:
+//                                 print("Removing candidate for ({}, {}) since y !<=_2 x ==> A[x][y] != y: {}".format(x,y,y), file=sys.stderr)
+//                             candidates.remove(y)
+//                         if len(candidates) == 0:
+//                             if debug_print:
+//                                 print("No suitable candidates for ({}, {}).".format(x,y), file=sys.stderr)
+//                             can_coexist = False
+//                             return False
+//                         if can_coexist:
+//                             cands[idx] = candidates
+//                             key_map[idx] = (x,y)
+//                             #print(idx, ": ", sep="", end="")
+//                             #print(candidates)
+
+
+//                     idx+= 1
+
+// def generate_As_with_ords3(rel1, rel2, debug_print = False, callback=None, *args):
+//     n = len(rel1)
+//     res_AAs = []
+//     res_msgs = []
+//     #print(n)
+//     A = initA(n)
+//     #print(A)
+//     can_coexist = True
+//     b_arr = []
+//     for x in range(n):
+//         b_arr.append([])
+//         for y in range(n):
+//             if x == y:
+//                 b_arr[x].append(True)
+//             else:
+//                 b_arr[x].append(False)
+//     #print(b_arr)
+//     #print("Rel1:", rel1)
+//     #print("Rel2:", rel2)
+//     for x in range(n):
+//         for y in range(n):
+//             if x != y:
+//                 if rel1[x][y] == 1:
+//                     #print("HH1")
+//                     #b_arr[x][y] = True
+//                     #A[x][y] = x
+//                     #print("Part fill:", A)
+//                     if b_arr[x][y] and A[x][y] != x:
+//                         if debug_print:
+//                             print("x <=_1 y, but A[x][y] != x: x = {}, y = {}".format(x,y), file=sys.stderr)
+//                         can_coexist = False
+//                         return False
+//                     if not b_arr[x][y]:
+//                         if debug_print:
+//                             print("x <=_1 y ==> A[x][y] = x: x = {}, y = {}".format(x,y), file=sys.stderr)                        
+//                         A[x][y] = x
+//                         b_arr[x][y] = True
+
+//                 if rel2[x][y] == 1:
+//                     #print("HH2")
+//                     #A[y][x] = x
+//                     #b_arr[y][x] = True
+//                     #print("Part fill:", A)
+//                     if b_arr[y][x] and A[y][x] != x:
+//                         if debug_print:
+//                             print("x <=_2 y, but A[y][x] != x: x = {}, y = {}".format(x,y), file=sys.stderr)
+//                         can_coexist = False
+//                         return False
+//                     if not b_arr[y][x]:
+//                         if debug_print:
+//                             print("x <=_2 y ==> A[y][x] = x: x = {}, y = {}".format(x,y), file=sys.stderr)                        
+//                         A[y][x] = x
+//                         b_arr[y][x] = True
+
+//     for x in range(n):
+//         for y in range(n):
+//             if x != y:
+//                 if b_arr[x][y] and b_arr[y][x]:
+//                     if rel1[x][y] and not rel1[x][A[y][x]]:
+//                         if debug_print:
+//                             print("F5 failed: x <=_1 y, but x = A[x][x] !<=_1 A[y][x]: x = {}, y = {}".format(x,y), file=sys.stderr)
+//                         can_coexist = False
+//                         return False
+//                     if rel2[y][x] and not rel2[y][A[y][x]]:
+//                         if debug_print:
+//                             print("F6 failed: x <=_2 y, but A[y][x] !<=_2 y = A[y][y]: x = {}, y = {}".format(x,y), file=sys.stderr)
+//                         can_coexist = False
+//                         return False
+    
+//     if debug_print:
+//         print_partial(A, b_arr, sys.stderr)
+//     cands = dict()
+//     key_map = dict()
+//     is_missing = False
+//     if can_coexist:
+//         #print(A)
+//         #print("Missing indexes: ")
+        
+//         idx = 0
+//         for x in range(n):
+//             for y in range(n):
+//                 if x != y:
+//                     if not b_arr[x][y]:
+//                         #print("x = {}, y = {}".format(x,y))
+//                         is_missing = True
+//                         # get candidates
+//                         candidates=set()
+//                         for q in range(n):
+//                             # F1: A[x][y] <=_2 x
+//                             if rel2[q][x]:
+//                                 if debug_print:
+//                                     print("Adding candidate for ({}, {}) due F1: A[x][y] <=_2 x: {}".format(x,y,q), file=sys.stderr)
+//                                 candidates.add(q)
+//                             # F2: A[x][y] <=_1 y    
+//                             if rel1[q][y]:
+//                                 if debug_print:
+//                                     print("Adding candidate for ({}, {}) due F2: A[x][y] <=_1 y: {}".format(x,y,q), file=sys.stderr)
+//                                 candidates.add(q)
+//                         # candidates = set(range(n))
+//                         if rel1[x][y] == 0:
+//                             if debug_print:
+//                                 print("Removing candidate for ({}, {}) since x !<=_1 y ==> A[x][y] != x: {}".format(x,y,x), file=sys.stderr)
+//                             candidates.remove(x)
+//                         if rel2[y][x] == 0:
+//                             if debug_print:
+//                                 print("Removing candidate for ({}, {}) since y !<=_2 x ==> A[x][y] != y: {}".format(x,y,y), file=sys.stderr)
+//                             candidates.remove(y)
+//                         if len(candidates) == 0:
+//                             if debug_print:
+//                                 print("No suitable candidates for ({}, {}).".format(x,y), file=sys.stderr)
+//                             can_coexist = False
+//                             return False
+//                         if can_coexist:
+//                             cands[idx] = candidates
+//                             key_map[idx] = (x,y)
+//                             #print(idx, ": ", sep="", end="")
+//                             #print(candidates)
+
+
+//                     idx+= 1
+//         #print("--")
+//         #for m in m_idx:
+//         if can_coexist:
+//             #print(can_coexist)
+//             #print("A:", A)
+//             AA = A.copy()
+//             for i in range(n):
+//                 AA[i] = A[i].copy()
+//             # fill single candidates
+//             keys_to_delete = []
+//             for key,values in cands.items():
+//                 if len(values) == 1:
+//                     sg_val = values.pop()
+//                     #del cands[key]
+//                     keys_to_delete.append(key)
+//                     xx = key_map[key][0]
+//                     yy = key_map[key][1]
+//                     if debug_print:
+//                         print("Filling single value candidate for ({}, {}): {}".format(xx, yy, sg_val), file=sys.stderr)
+//                     AA[xx][yy] = sg_val
+//                     b_arr[xx][yy] = True
+//             for k in keys_to_delete:
+//                 del cands[k]
+//             is_missing = not all(all(r) for r in b_arr)
+//             if debug_print:
+//                 print_partial(AA, b_arr, sys.stderr)
+//             if is_missing:
+//                 if test_part_F3(AA, b_arr) and test_part_F4(AA, b_arr) and\
+//                     test_part_F5(AA, b_arr) and test_part_F6(AA, b_arr):
+//                     if True:
+//                         print("Candidates: ", cands, file=sys.stderr)
+//                         if callback:
+//                             msg = callback(*args)
+//                             print(msg, file=sys.stderr)
+//                     #print_partial(AA, b_arr)
+//                     #print(rel1)
+//                     #print(rel2)
+//                     #return
+//                     prodlist = []
+//                     for k in cands.keys():
+//                         prodlist.append(list(cands[k]))
+//                     #print(prodlist)
+                    
+//                     ####
+//                     if False:
+//                         prod_count = 0
+//                         ts = time.perf_counter()
+//                         for q in itertools.product(*prodlist):
+//                             prod_count +=1
+//                             if prod_count % 1_000_000 == 0:
+//                                 te = time.perf_counter()
+//                                 print("State: {}".format(q), file=sys.stderr)
+//                                 print("Time: {} s".format(te-ts), file=sys.stderr)
+//                                 ts = te
+//                             #print("q:", q)
+//                             k_idx = 0
+//                             for k in cands.keys():
+//                                 AA[key_map[k][0]][key_map[k][1]] = q[k_idx]
+//                                 k_idx+=1
+//                             #print("AA:", AA)
+//                             #cur_test(AA)
+//                             if just_test(AA):
+//                                 print(AA, flush=True)
+//                             #print("--")
+//                     else:
+//                         global g_ts, g_tested_filled, g_success
+//                         g_ts = time.perf_counter()
+//                         l_ts = time.perf_counter()
+//                         g_tested_filled = 0
+//                         g_success = 0
+//                         fill_missing_rec4(0, cands, key_map, AA, b_arr, rel1, rel2, res_AAs, res_msgs, debug_print, callback, *args)
+//                         l_te = time.perf_counter()
+//                         if True:
+//                             print("Total tested: {}, Success: {}".format(g_tested_filled, g_success), file=sys.stderr)
+//                             print("Total time: {}".format(l_te - l_ts), file=sys.stderr)
+//             else:
+//                 l_success = 0
+//                 if just_test(AA):
+//                     l_success +=1
+//                     if callback:
+//                         msg = callback(*args)
+//                     print(AA, '#', msg, flush=True, file=sys.stderr)
+//                     res_AAs.append(AA)
+//                     res_msgs.append(msg)
+//                 if True:
+//                     if callback:
+//                         msg = callback(*args)
+//                         print(msg, file=sys.stderr)
+//                     print("Immediately filled.", file=sys.stderr)
+//                     print("Total tested: {}, Success: {}".format(1, l_success), file=sys.stderr)
+
+//                 #cur_test(AA)
+//                 #print("--")
+//     #else:
+//     # print("HERE: ", res_AAs, res_msgs)
+//     return (res_AAs, res_msgs)
+
+pub fn falg_find_min_repr(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    let n = falg.len();
+
+    let mut perm:Vec<usize> = (0..n).collect();
+
+    let mut b_first = true;
+    let mut falg_min_repr = falg.clone();
+
+    loop {
+        if b_first {
+            b_first = false;
+        }
+        else {
+            let falg_iso = falg_isomorphic_image(falg, &perm);
+
+            if rel_quasi_order_is_lesser_rel(&falg_iso, &falg_min_repr) {
+                falg_min_repr = falg_iso;
+            }
+        }
+
+        if !permlib::next_perm(&mut perm, n) {
+            break;
+        }
+    }
+
+    falg_min_repr
+}
+
+pub fn falg_find_max_repr(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    let n = falg.len();
+
+    let mut perm:Vec<usize> = (0..n).collect();
+
+    let mut b_first = true;
+    let mut falg_max_repr = falg.clone();
+
+    loop {
+        if b_first {
+            b_first = false;
+        }
+        else {
+            let falg_iso = falg_isomorphic_image(falg, &perm);
+
+            if rel_quasi_order_is_greater_rel(&falg_iso, &falg_max_repr) {
+                falg_max_repr = falg_iso;
+            }
+        }
+
+        if !permlib::next_perm(&mut perm, n) {
+            break;
+        }
+    }
+
+    falg_max_repr
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn falg_init_test() {
+        let res1 = falg_init(0);
+        assert_eq!(res1, Vec::<Vec<usize>>::new());
+
+        let res2 = falg_init(1);
+        assert_eq!(res2, vec!(vec!(0)));
+
+        let res3 = falg_init(2);
+        assert_eq!(res3, vec!(vec!(0,0),vec!(0,1)));
+
+    }
+
+    #[test]
+    fn falg_test1() {
+        let falg = vec![vec![0usize, 0, 0, 0], vec![0, 1, 0, 0], vec![0, 0, 2, 0], vec![0, 1, 2, 3]];
+
+        assert_eq!(falg_all_tests_no_print(&falg), false);
+
+    }
 }
