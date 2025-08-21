@@ -948,8 +948,38 @@ fn falg_is_less1(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
     falg[x][y] == x
 }
 
+pub fn falg_get_qord1(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    let n = falg.len();
+    let mut qord_res = allocate_vector(n);
+
+    for i in 0..n {
+        for j in 0..n {
+            if i==j || falg_is_less1(&falg, i, j) {
+                qord_res[i][j] = 1;
+            }
+        }
+    }
+
+    qord_res
+}
+
 fn falg_is_less2(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
     falg[y][x] == x
+}
+
+pub fn falg_get_qord2(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    let n = falg.len();
+    let mut qord_res = allocate_vector(n);
+
+    for i in 0..n {
+        for j in 0..n {
+            if i==j || falg_is_less2(&falg, i, j) {
+                qord_res[i][j] = 1;
+            }
+        }
+    }
+
+    qord_res
 }
 
 fn falg_set_u_xy(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> HashSet<usize> {
@@ -1103,6 +1133,39 @@ fn rel_pair_set_s_xy(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>, x: usize, y
         }
     }
     res_set_s_xy
+}
+
+pub fn rel_is_stabilizer_perm(rel: &Vec<Vec<usize>>, perm: &Vec<usize>) -> bool {
+    let n = perm.len();
+
+    for i in 0..n {
+        for j in 0..n {
+            if rel[i][j] == 1 && rel[perm[i]][perm[j]] != 1 {
+                return false;
+            }
+            if rel[perm[i]][perm[j]] == 1 && rel[i][j] != 1 {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+pub fn rel_get_stabilizer_perms(rel: &Vec<Vec<usize>>) -> HashSet<Vec<usize>> {
+    let n = rel.len();
+    let mut res = HashSet::<Vec<usize>>::new();
+
+    let mut perm = (0..n).collect::<Vec<_>>();
+    loop {
+        if rel_is_stabilizer_perm(&rel, &perm) {
+            res.insert(perm.clone());
+        }
+        if !permlib::next_perm(&mut perm, n) {
+            break;
+        }
+    }
+
+    res
 }
 
 fn falg_set_t_xy(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> HashSet<usize> {
@@ -2255,5 +2318,32 @@ mod tests {
 
         assert_eq!(falg_all_tests_no_print(&falg), false);
 
+    }
+
+    #[test]
+    fn rel_stab_tst1() {
+        let rel1 = vec![vec![1,0],vec![0,1usize]];
+        let mut hs1 = HashSet::<Vec<usize>>::new();
+        hs1.insert(vec![0,1]);
+        hs1.insert(vec![1,0]);
+        
+        assert_eq!(rel_get_stabilizer_perms(&rel1), hs1);
+
+        let rel2 = vec![vec![1,0,0], vec![0,1,0], vec![0,0,1usize]];
+        let mut hs2 = HashSet::<Vec<usize>>::new();
+        hs2.insert(vec![0,1,2]);
+        hs2.insert(vec![0,2,1]);
+        hs2.insert(vec![1,0,2]);
+        hs2.insert(vec![1,2,0]);
+        hs2.insert(vec![2,0,1]);
+        hs2.insert(vec![2,1,0]);
+
+        assert_eq!(rel_get_stabilizer_perms(&rel2), hs2);
+
+        let rel3 = vec![vec![1,0,1], vec![0,1,1], vec![0,0,1usize]];
+        let mut hs3 = HashSet::<Vec<usize>>::new();
+        hs3.insert(vec![0,1,2]);
+        hs3.insert(vec![1,0,2]);
+        assert_eq!(rel_get_stabilizer_perms(&rel3), hs3);
     }
 }
