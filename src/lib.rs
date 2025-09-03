@@ -2266,6 +2266,35 @@ pub fn falg_find_min_repr(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
     falg_min_repr
 }
 
+pub fn falg_is_min_repr(falg: &Vec<Vec<usize>>) -> bool {
+    let n = falg.len();
+
+    let mut perm:Vec<usize> = (0..n).collect();
+
+    // let mut b_first = true;
+    // let mut falg_min_repr = falg.clone();
+
+    loop {
+        // if b_first {
+        //     b_first = false;
+        // }
+        // else {
+        let falg_iso = falg_isomorphic_image(falg, &perm);
+
+        if rel_quasi_order_is_lesser_rel(&falg_iso, falg) {
+            return false;
+        }
+        // }
+
+        if !permlib::next_perm(&mut perm, n) {
+            break;
+        }
+    }
+
+    true
+}
+
+
 pub fn falg_find_max_repr(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
     let n = falg.len();
 
