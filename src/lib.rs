@@ -339,6 +339,40 @@ pub fn rel_quasi_order_find_can_max_repr(rel_qord:&Vec<Vec<usize>>) -> Vec<Vec<u
     cmax_rel_qord_repr
 }
 
+// quasi order maximal repr
+pub fn rel_quasi_order_find_max_repr(rel_qord:&Vec<Vec<usize>>) -> Vec<Vec<usize>> {    
+    let n = rel_qord.len();
+    
+    let mut b_repr_max_rel_qord = false;
+
+    let mut perm = (0..n).into_iter().collect::<Vec<_>>();
+
+    let mut max_rel_qord_repr = allocate_vector(n);
+    loop {
+        //if rel_quasi_order_perm_preserves_canonical_quasi_order(&c_rel_qord, &perm) {
+        let rel_qord_iso = rel_isomorphic_image(&rel_qord, &perm);
+        if !b_repr_max_rel_qord {
+            max_rel_qord_repr = rel_qord_iso;
+            b_repr_max_rel_qord = true;
+        }
+        else {
+            // compare new representation
+            if rel_quasi_order_is_greater_rel(&rel_qord_iso, &max_rel_qord_repr) {
+                max_rel_qord_repr = rel_qord_iso;
+            }
+        }
+
+        //}
+        
+        if !permlib::next_perm(&mut perm, n) {
+            break;
+        }
+    }
+
+    max_rel_qord_repr
+}
+
+
 // quasi order canonical maximal
 pub fn rel_quasi_order_find_can_min_repr(rel_qord:&Vec<Vec<usize>>) -> Vec<Vec<usize>> {
     // copy c_rel_qord
