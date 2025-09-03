@@ -656,7 +656,7 @@ pub fn rel_isomorphic_expand(qord: &Vec<Vec<usize>>) -> (HashSet<Vec<Vec<usize>>
 
 
 
-fn rel_is_reflexive(rel: &Vec<Vec<usize>>) -> bool {
+pub fn rel_is_reflexive(rel: &Vec<Vec<usize>>) -> bool {
     let n = rel.len();
 
     for i in 0..n {
@@ -667,7 +667,7 @@ fn rel_is_reflexive(rel: &Vec<Vec<usize>>) -> bool {
     true
 }
 
-fn rel_is_antisymmetric(rel: &Vec<Vec<usize>>) -> bool {
+pub fn rel_is_antisymmetric(rel: &Vec<Vec<usize>>) -> bool {
     let n = rel.len();
 
     for i in 0..n {
@@ -681,7 +681,7 @@ fn rel_is_antisymmetric(rel: &Vec<Vec<usize>>) -> bool {
     true
 }
 
-fn rel_is_transitive(rel: &Vec<Vec<usize>>) -> bool {
+pub fn rel_is_transitive(rel: &Vec<Vec<usize>>) -> bool {
     let n = rel.len();
 
     for i in 0..n {
