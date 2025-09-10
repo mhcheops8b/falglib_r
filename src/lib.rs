@@ -688,6 +688,39 @@ pub fn rel_isomorphic_expand(qord: &Vec<Vec<usize>>) -> (HashSet<Vec<Vec<usize>>
     (res, permiso)
 }
 
+pub fn rel_isomorphic_expand_vec(qord: &Vec<Vec<usize>>) -> (Vec<Vec<Vec<usize>>>, HashMap<Vec<usize>, Vec<Vec<usize>>>) {
+    let size = qord.len();
+    let mut perm = Vec::<usize>::new();
+    for i in 0..size {
+        perm.push(i);
+    }
+
+    let mut res: HashSet<Vec<Vec<usize>>> = HashSet::new();
+    let mut resvec: Vec<Vec<Vec<usize>>> = Vec::new();
+    let mut permiso: HashMap<Vec<usize>, Vec<Vec<usize>>> = HashMap::new();
+
+    let mut old_size =res.len();
+    loop {
+
+        let iso_image = rel_isomorphic_image(&qord, &perm);
+
+        res.insert(iso_image.clone());
+
+        if old_size != res.len() {
+            // println!("\tNew {:?}", iso_image);
+            resvec.push(iso_image.clone());
+            permiso.insert(perm.clone(), iso_image);
+
+            old_size = res.len();
+        }
+      
+        if !permlib::next_perm(&mut perm, size) {
+            break;
+        }
+    }
+
+    (resvec, permiso)
+}
 
 
 pub fn rel_is_reflexive(rel: &Vec<Vec<usize>>) -> bool {
@@ -2408,5 +2441,55 @@ mod tests {
         hs3.insert(vec![0,1,2]);
         hs3.insert(vec![1,0,2]);
         assert_eq!(rel_get_stabilizer_perms(&rel3), hs3);
+    }
+
+    #[test]
+    fn test_rel_isomorphic_expand_vec() {
+        let rel = vec![vec![1usize,1,1], vec![0,1,1], vec![0,0,1]];
+        let aa1 = rel_isomorphic_expand_vec(&rel);
+        let aa2 = rel_isomorphic_expand_vec(&rel);
+        assert_eq!(aa1.0, aa2.0);
+    }
+
+    #[test]
+    fn test_rel_isomorphic_expand_vec2() {
+        let rel = vec![vec![1usize,1,1], vec![0,1,1], vec![0,0,1]];
+        let aa1 = rel_isomorphic_expand_vec(&rel);
+        assert_eq!(aa1.0.len(), 6);
+        assert_eq!(aa1.0[0], vec![vec![1,1,1],vec![0,1,1],vec![0,0,1]]);
+        assert_eq!(aa1.0[1], vec![vec![1,1,1],vec![0,1,0],vec![0,1,1]]);
+        assert_eq!(aa1.0[2], vec![vec![1,0,1],vec![1,1,1],vec![0,0,1]]);
+        assert_eq!(aa1.0[3], vec![vec![1,0,0],vec![1,1,1],vec![1,0,1]]);
+        assert_eq!(aa1.0[4], vec![vec![1,1,0],vec![0,1,0],vec![1,1,1]]);
+        assert_eq!(aa1.0[5], vec![vec![1,0,0],vec![1,1,0],vec![1,1,1]]);
+    }
+
+
+    #[test]
+    fn test_rel_isomorphic_expand() {
+        let rel = vec![vec![1usize,1,1], vec![0,1,1], vec![0,0,1]];
+        let aa1 = rel_isomorphic_expand(&rel);
+        let aa2 = rel_isomorphic_expand(&rel);
+        println!("{:?} {:?}", aa1.0, aa2.0);
+        assert_eq!(aa1.0, aa2.0);
+    }
+
+        #[test]
+    fn test_rel_isomorphic_expand2() {
+        // should fail
+        let rel = vec![vec![1usize,1,1], vec![0,1,1], vec![0,0,1]];
+        let aa1 = rel_isomorphic_expand(&rel);
+        let bb1:Vec<Vec<Vec<usize>>> = aa1.0.into_iter().collect();
+        
+        assert_eq!(bb1.len(), 6);
+        
+        let cond = 
+            (bb1[0] == vec![vec![1,1,1],vec![0,1,1],vec![0,0,1]]) &&
+            (bb1[1] == vec![vec![1,1,1],vec![0,1,0],vec![0,1,1]]) &&
+            (bb1[2] == vec![vec![1,0,1],vec![1,1,1],vec![0,0,1]]) &&
+            (bb1[3] == vec![vec![1,0,0],vec![1,1,1],vec![1,0,1]]) &&
+            (bb1[4] == vec![vec![1,1,0],vec![0,1,0],vec![1,1,1]]) &&
+            (bb1[5] == vec![vec![1,0,0],vec![1,1,0],vec![1,1,1]]);
+        assert_eq!(cond, false);
     }
 }
