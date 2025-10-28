@@ -698,7 +698,7 @@ fn rel_is_transitive(rel: &Vec<Vec<usize>>) -> bool {
     true
 }
 
-fn falg_test_f1(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_f1(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for x in 0..n {
@@ -716,7 +716,7 @@ fn falg_test_f1(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     true
 }
 
-fn falg_test_f2(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_f2(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for x in 0..n {
@@ -734,7 +734,7 @@ fn falg_test_f2(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     true
 }
 
-fn falg_test_f3(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_f3(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for x in 0..n {
@@ -756,7 +756,7 @@ fn falg_test_f3(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     true
 }
 
-fn falg_test_f4(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_f4(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for x in 0..n {
@@ -778,7 +778,7 @@ fn falg_test_f4(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     true
 }
 
-fn falg_test_f5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_f5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for x in 0..n {
@@ -798,7 +798,7 @@ fn falg_test_f5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     true
 }
 
-fn falg_test_f6(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_f6(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for x in 0..n {
@@ -951,6 +951,37 @@ fn falg_is_less1(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
 fn falg_is_less2(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> bool {
     falg[y][x] == x
 }
+
+pub fn falg_get_qord1(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    let n = falg.len();
+
+    let mut qord1_res = allocate_vector(n);
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg_is_less1(falg, x, y) {
+                qord1_res[x][y] = 1
+            }
+        }
+    }
+    qord1_res
+}
+
+pub fn falg_get_qord2(falg: &Vec<Vec<usize>>) -> Vec<Vec<usize>> {
+    let n = falg.len();
+
+    let mut qord2_res = allocate_vector(n);
+
+    for x in 0..n {
+        for y in 0..n {
+            if falg_is_less2(falg, x, y) {
+                qord2_res[x][y] = 1
+            }
+        }
+    }
+    qord2_res
+}
+
 
 fn falg_set_u_xy(falg: &Vec<Vec<usize>>, x: usize, y:usize) -> HashSet<usize> {
     let n = falg.len();
