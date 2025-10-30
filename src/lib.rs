@@ -147,6 +147,30 @@ pub fn rel_isomorphic_image(rel:&Vec<Vec<usize>>, perm:&Vec<usize>)->Vec<Vec<usi
     return res;
 }
 
+// new condition to reduce allowed pairs [TODO]
+pub fn rel_quasi_order_preserves_order_test(rel_qord:&Vec<Vec<usize>>) -> bool {
+    let n = rel_qord.len();
+
+    for x in 0.. n {
+        for y in 0 .. n {
+            if x > y && rel_qord[x][y] == 1 && rel_qord[y][x] == 0 {
+                let mut b_found = false;
+                for t in 0..y {
+                    if rel_qord[t][y] == 1 && rel_qord[t][x] == 1 && rel_qord[x][t] == 1 {
+                        b_found = true;
+                        break;
+                    }
+                }
+                if !b_found {
+                    return false;
+                }
+            }
+        }
+    }
+    true
+}
+
+
 pub fn find_canonical_quasi_order(rel_qord:&Vec<Vec<usize>>) -> Vec<Vec<usize>> {
     let n = rel_qord.len();
 
@@ -712,6 +736,43 @@ pub fn rel_isomorphic_expand_vec(qord: &Vec<Vec<usize>>) -> (Vec<Vec<Vec<usize>>
             permiso.insert(perm.clone(), iso_image);
 
             old_size = res.len();
+        }
+      
+        if !permlib::next_perm(&mut perm, size) {
+            break;
+        }
+    }
+
+    (resvec, permiso)
+}
+
+
+// new condition applied 
+pub fn rel_isomorphic_expand_reduced_vec(qord: &Vec<Vec<usize>>) -> (Vec<Vec<Vec<usize>>>, HashMap<Vec<usize>, Vec<Vec<usize>>>) {
+    let size = qord.len();
+    let mut perm = Vec::<usize>::new();
+    for i in 0..size {
+        perm.push(i);
+    }
+
+    let mut res: HashSet<Vec<Vec<usize>>> = HashSet::new();
+    let mut resvec: Vec<Vec<Vec<usize>>> = Vec::new();
+    let mut permiso: HashMap<Vec<usize>, Vec<Vec<usize>>> = HashMap::new();
+
+    let mut old_size =res.len();
+    loop {
+
+        let iso_image = rel_isomorphic_image(&qord, &perm);
+        if rel_quasi_order_preserves_order_test(&iso_image) {
+            res.insert(iso_image.clone());
+
+            if old_size != res.len() {
+                // println!("\tNew {:?}", iso_image);
+                resvec.push(iso_image.clone());
+                permiso.insert(perm.clone(), iso_image);
+
+                old_size = res.len();
+            }
         }
       
         if !permlib::next_perm(&mut perm, size) {
