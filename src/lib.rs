@@ -746,6 +746,30 @@ pub fn rel_isomorphic_expand_vec(qord: &Vec<Vec<usize>>) -> (Vec<Vec<Vec<usize>>
     (resvec, permiso)
 }
 
+pub fn rel_isomorphic_expand_full_size(qord: &Vec<Vec<usize>>) -> usize {
+    let size = qord.len();
+    let mut perm = Vec::<usize>::new();
+    for i in 0..size {
+        perm.push(i);
+    }
+
+    let mut res: HashSet<Vec<Vec<usize>>> = HashSet::new();
+    
+    loop {
+
+        let iso_image = rel_isomorphic_image(&qord, &perm);
+
+        res.insert(iso_image.clone());
+      
+        if !permlib::next_perm(&mut perm, size) {
+            break;
+        }
+    }
+
+    res.len()
+}
+
+
 
 // new condition applied 
 pub fn rel_isomorphic_expand_reduced_vec(qord: &Vec<Vec<usize>>) -> (Vec<Vec<Vec<usize>>>, HashMap<Vec<usize>, Vec<Vec<usize>>>) {
