@@ -1670,25 +1670,30 @@ pub fn falg_generate_with_qords(qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>
             if x != y {
                 if !b_filled_arr[x][y] {
                     missing_cnt += 1;
-                    let mut fill_candidates = HashSet::<usize>::new();
+                    let mut fill_candidates = rel_pair_set_s_xy(qord1, qord2, x, y);
+                    // remove x, y if present
+                    // (x,y) is unfilled, thus it holds ! x<=_1 y and ! y <=_2 x
+                    fill_candidates.remove(&x);
+                    fill_candidates.remove(&y);
+                    // let mut fill_candidates = HashSet::<usize>::new();
 
-                    // Assumption q = A[x][y], 
-                    // since x !<=_1 y and y !<=_2 x
-                    // A[x][y] != x, y
-                    for q in 0..n {
-                        // F1: A[x][y] <=_2 x
-                        if qord2[q][x] == 1 {
-                            if q != x {
-                                fill_candidates.insert(q);
-                            }
-                        }
-                        // F2: A[x][y] <=_1 y
-                        if qord1[q][y] == 1 {
-                            if q != y {
-                                fill_candidates.insert(q);
-                            }
-                        }
-                    }
+                    // // Assumption q = A[x][y], 
+                    // // since x !<=_1 y and y !<=_2 x
+                    // // A[x][y] != x, y
+                    // for q in 0..n {
+                    //     // F1: A[x][y] <=_2 x
+                    //     if qord2[q][x] == 1 {
+                    //         if q != x {
+                    //             fill_candidates.insert(q);
+                    //         }
+                    //     }
+                    //     // F2: A[x][y] <=_1 y
+                    //     if qord1[q][y] == 1 {
+                    //         if q != y {
+                    //             fill_candidates.insert(q);
+                    //         }
+                    //     }
+                    // }
                     let fc_size = fill_candidates.len();
                     // no candidates to fill (x,y)
                     if fc_size == 0 {
