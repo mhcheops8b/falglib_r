@@ -1400,6 +1400,52 @@ fn rel_pair_az_relation(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>, x: usize
     false
 }
 
+pub fn rel_count_strict_minimal_elements(qord: &Vec<Vec<usize>>) -> usize {
+    let n = qord.len();
+    let mut min_count= 0usize;
+    for x in 0..n {
+        let mut bfound = false;
+        for t in 0..n {
+            if t != x && qord[t][x] == 1 {
+                bfound=true;
+                break;
+            }
+        }
+        if !bfound {
+            min_count+=1;
+        }
+    }
+    min_count
+}
+
+fn rel_pair_has_candidates_check_pair(qord1:&Vec<Vec<usize>>, qord2:&Vec<Vec<usize>>, x: usize, y:usize) -> bool {
+    // x <=_1 y -> (x,y) = x or y <=_2 x (x,y) = y
+    if qord1[x][y] == 1 || qord2[y][x] == 1 {
+        return true;
+    }
+    
+    for t in 0..qord1.len() {
+        if t != x && t != y && qord1[t][y] == 1 && qord2[t][x] == 1 {
+            return true;
+        }
+    }
+    false
+}
+
+pub fn rel_pair_has_all_candidates_check(qord1:&Vec<Vec<usize>>, qord2:&Vec<Vec<usize>>) -> bool {
+    let n = qord1.len();
+    for x in 0..n {
+        for y in x+1..n {
+            if  !rel_pair_has_candidates_check_pair(qord1, qord2, x, y) ||
+                !rel_pair_has_candidates_check_pair(qord1, qord2, y, x) {
+                    return false;
+                }
+        }
+    }
+    return true;
+}
+
+
 fn falg_test_cond_n1(falg: &Vec<Vec<usize>>) -> bool {
     let n = falg.len();
 
