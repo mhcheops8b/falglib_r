@@ -12,7 +12,7 @@
 //         assert_eq!(result, 4);
 //     }
 // }
-
+use std::io::Write;
 use std::collections::{HashMap, HashSet};
 use permlib;
 
@@ -1781,6 +1781,153 @@ pub fn falg_generate_with_qords(qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>
     true
 }
 
+pub fn falg_generate_with_qords_writer(out_writer: &mut std::fs::File, qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>) -> bool {
+    let n = qord1.len();
+    let mut falg = falg_init(n);
+    let mut b_filled_arr = Vec::<Vec<bool>>::new();
+    // init b_filled_arr
+    for x in 0..n {
+        b_filled_arr.push(Vec::<bool>::new());
+        for y in 0..n {
+            if x == y {
+                b_filled_arr[x].push(true);
+            }
+            else {
+                b_filled_arr[x].push(false);
+            }
+        }
+    }
+    // quasi-order induced fillings
+    // x <=_1 y, iff A[x][y] == x
+    // x <=_2 y, iff A[y][x] == x
+    for x in 0..n {
+        for y in 0..n {
+            if x != y {
+                if qord1[x][y] == 1 {
+                    if !b_filled_arr[x][y] {
+                        falg[x][y] = x;
+                        b_filled_arr[x][y] = true;
+                    }
+                    else {
+                        if falg[x][y] != x {
+                            // eprintln!("HH1");
+                            return false;
+                        }
+                    }
+                }
+                if qord2[x][y] == 1 {
+                    if !b_filled_arr[y][x] {
+                        falg[y][x] = x;
+                        b_filled_arr[y][x] = true;
+                    }
+                    else {
+                        if falg[y][x] != x {
+                            // eprintln!("HH2");
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // F5 consequence x <=_1 y => A[ A[x][z] ][ A[y][z]] = A[x][z] <=> A[x][z] <=_1 A[y][z]
+    // for z = x: x <=_1 A[y][x]
+    // F6 consequence x <=_2 y => A[z][x] <=_2 A[z][y]
+    // for z = x: x  <=_2 A[x][y]
+    for x in 0..n {
+        for y in 0..n {
+            if x != y {
+                if b_filled_arr[x][y] && b_filled_arr[y][x] {
+                    if qord1[x][y] == 1 && qord1[x][falg[y][x]] != 1 {
+                        // eprintln!("HH3");
+                        return false;
+                    }
+                    if qord2[x][y] == 1 && qord2[x][falg[x][y]] != 1 {
+                        // eprintln!("HH4");
+                        return false;
+                    }
+                }
+            }
+        }
+    }
+    let mut cand_idx = 0usize;
+    let mut missing_cnt = 0usize;
+    let mut cands_map = HashMap::<usize, HashSet<usize>>::new();
+    let mut pairs_map = HashMap::<usize, (usize, usize)>::new();
+    let mut pairs_inv_map = HashMap::<(usize, usize), usize>::new();
+    for x in 0..n {
+        for y in 0..n {
+            if x != y {
+                if !b_filled_arr[x][y] {
+                    missing_cnt += 1;
+                    let mut fill_candidates = rel_pair_set_s_xy(qord1, qord2, x, y);
+                    // remove x, y if present
+                    // (x,y) is unfilled, thus it holds ! x<=_1 y and ! y <=_2 x
+                    fill_candidates.remove(&x);
+                    fill_candidates.remove(&y);
+                    // let mut fill_candidates = HashSet::<usize>::new();
+
+                    // // Assumption q = A[x][y], 
+                    // // since x !<=_1 y and y !<=_2 x
+                    // // A[x][y] != x, y
+                    // for q in 0..n {
+                    //     // F1: A[x][y] <=_2 x
+                    //     if qord2[q][x] == 1 {
+                    //         if q != x {
+                    //             fill_candidates.insert(q);
+                    //         }
+                    //     }
+                    //     // F2: A[x][y] <=_1 y
+                    //     if qord1[q][y] == 1 {
+                    //         if q != y {
+                    //             fill_candidates.insert(q);
+                    //         }
+                    //     }
+                    // }
+                    let fc_size = fill_candidates.len();
+                    // no candidates to fill (x,y)
+                    if fc_size == 0 {
+                        // eprintln!("No candidates for ({x}, {y})");
+                        return false;
+                    }
+                    if fc_size == 1 {
+                        if let Some(&c) = fill_candidates.iter().next() {
+                            falg[x][y] = c;
+                            b_filled_arr[x][y] = true;
+                            missing_cnt -= 1;
+                        }
+                    }
+                    else {
+                        cands_map.insert(cand_idx, fill_candidates);
+                        pairs_map.insert(cand_idx, (x,y));
+                        pairs_inv_map.insert((x,y), cand_idx);
+                    }
+                }
+                cand_idx +=1;
+            }
+        }
+    }
+    if missing_cnt == 0 {
+        if falg_all_tests_no_print(&falg) {
+            writeln!(out_writer, "{:?}", falg).unwrap();
+            //println!("{:?}", falg);
+        }
+    }
+    else {
+        // eprintln!("missing: {}", missing_cnt);
+        // eprintln!("candidates: {cands_map:?}");
+        // eprintln!("pairs: {pairs_map:?}");
+        // eprintln!("inv pairs: {pairs_inv_map:?}");
+        let mut key_arr = pairs_map.keys().map(|&x| x).collect::<Vec<_>>();
+        key_arr.sort();
+        // eprintln!("map keys: {key_arr:?}");
+        falg_fill_missing_v3_writer(out_writer, 0, &key_arr, &cands_map, &pairs_map, &pairs_inv_map, qord1, qord2, &mut falg, &mut b_filled_arr);
+    }
+    true
+}
+
+
 // no speculative tests
 pub fn falg_fill_missing_v0(cur_idx:usize, key_arr:&Vec<usize>, cands_map: &HashMap<usize, HashSet<usize>>, pairs_map: &HashMap<usize, (usize, usize)>, pairs_inv_map: &HashMap<(usize, usize), usize>, part_falg: &mut Vec<Vec<usize>>, part_b_filled_arr: &mut Vec<Vec<bool>>) {
     if cur_idx == cands_map.len() {
@@ -2239,6 +2386,239 @@ pub fn falg_fill_missing_v3(cur_idx:usize, key_arr: &Vec<usize>, cands_map: &Has
     }
 
 }
+
+pub fn falg_fill_missing_v3_writer(out_writer: &mut std::fs::File, cur_idx:usize, key_arr: &Vec<usize>, cands_map: &HashMap<usize, HashSet<usize>>, pairs_map: &HashMap<usize, (usize, usize)>, pairs_inv_map: &HashMap<(usize, usize), usize>, qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>, part_falg: &mut Vec<Vec<usize>>, part_b_filled_arr: &mut Vec<Vec<bool>>) {
+    if cur_idx == cands_map.len() {
+        // test conditions for falg
+        if falg_all_tests_no_print(part_falg) {
+            writeln!(out_writer, "{:?}", part_falg).unwrap();
+            //println!("{:?}", part_falg);
+        }
+    }
+    else {
+        let key_idx = key_arr[cur_idx];
+        let cur_cands = cands_map.get(&key_idx).unwrap();
+        let (cur_x, cur_y) = *pairs_map.get(&key_idx).unwrap();
+        if !part_b_filled_arr[cur_x][cur_y] {
+            for &c in cur_cands {
+                let mut to_fill_map = HashMap::<(usize,usize),usize>::new();
+                // c = F(x,y)
+                // F1: F(x, F(x,c)) = F(x,c) = c
+                if part_b_filled_arr[cur_x][c] && part_falg[cur_x][c] != c {
+                    continue;
+                }
+                // F2: F(F(c,y),y) = F(c,y) = c
+                if part_b_filled_arr[c][cur_y] && part_falg[c][cur_y] != c {
+                    continue;
+                }
+                if !part_b_filled_arr[cur_x][c] {
+                    let p_idx = pairs_inv_map.get(&(cur_x, c)).expect("no inv index");
+                    let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                    if !cand_set.contains(&c) {
+                        continue;
+                    }
+                    else {
+                        to_fill_map.insert((cur_x, c), c);
+                    }
+                }
+                if !part_b_filled_arr[c][cur_y] {
+                    let p_idx = pairs_inv_map.get(&(c, cur_y)).expect("no inv index");
+                    let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                    if !cand_set.contains(&c) {
+                        continue;
+                    }
+                    else {
+                        to_fill_map.insert((c, cur_y), c);
+                    }
+                }
+                // F5: F(y, x) = y =>  F(y, F(x,y)) = y
+                if part_b_filled_arr[cur_y][cur_x] && part_falg[cur_y][cur_x] == cur_y {
+                    if part_b_filled_arr[cur_y][c] && part_falg[cur_y][c] != cur_y {
+                        continue;
+                    }
+                    if !part_b_filled_arr[cur_y][c] {
+                        let p_idx = pairs_inv_map.get(&(cur_y, c)).expect("no inv index");
+                        let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                        if !cand_set.contains(&cur_y) {
+                            continue;
+                        }
+                        else {
+                            to_fill_map.insert((cur_y, c), cur_y);
+                        }
+                    }
+                }
+                // F6: F(y, x) = x =>  F( F(x,y), x) = x
+                if part_b_filled_arr[cur_y][cur_x] && part_falg[cur_y][cur_x] == cur_x {
+                    if part_b_filled_arr[c][cur_x] && part_falg[c][cur_x] != cur_x {
+                        continue;
+                    }
+                    if !part_b_filled_arr[c][cur_x] {
+                        let p_idx = pairs_inv_map.get(&(c, cur_x)).expect("no inv index");
+                        let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                        if !cand_set.contains(&cur_x) {
+                            continue;
+                        }
+                        else {
+                            to_fill_map.insert((c, cur_x), cur_x);
+                        }
+                    }
+                }
+                // F5_2: t <=_1 x ==> F(t,y) <=_1 F(x,y) = c
+                // F5_2: x <=_1 t ==> c = F(x,y) <=_1 F(t,y)
+                let falg_size = qord1.len();
+                let mut b_problem = false;
+                for t in 0..falg_size {
+                    if t != cur_x {
+                        if qord1[t][cur_x] == 1 {
+                            if part_b_filled_arr[t][cur_y] && qord1[part_falg[t][cur_y]][c]==0 {
+                                b_problem = true;
+                                break;
+                            }
+                        
+                            if !part_b_filled_arr[t][cur_y] {
+                                let p_idx = pairs_inv_map.get(&(t, cur_y)).expect("no inv index");
+                                let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                                let mut b_found = false;
+                                for s in cand_set {
+                                    if qord1[*s][c] == 1 {
+                                        b_found = true;
+                                        break;
+                                    }
+                                }
+                                if !b_found {
+                                    b_problem = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if qord1[cur_x][t] == 1 {
+                            if part_b_filled_arr[t][cur_y] && qord1[c][part_falg[t][cur_y]]==0 {
+                                b_problem = true;
+                                break;
+                            }
+                        
+                            if !part_b_filled_arr[t][cur_y] {
+                                let p_idx = pairs_inv_map.get(&(t, cur_y)).expect("no inv index");
+                                let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                                let mut b_found = false;
+                                for s in cand_set {
+                                    if qord1[c][*s] == 1 {
+                                        b_found = true;
+                                        break;
+                                    }
+                                }
+                                if !b_found {
+                                    b_problem = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                }
+                
+                if b_problem {
+                    continue;
+                }
+
+                // F6_1: t <=_2 y ==> F(x,t) <=_2 F(x,y) = c
+                // F6_2: y <=_2 t ==> c = F(x,y) <=_2 F(x,t)
+                let mut b_problem = false;
+                for t in 0..falg_size {
+                    if t != cur_x {
+                        if qord2[t][cur_y] == 1 {
+                            if part_b_filled_arr[cur_x][t] && qord2[part_falg[cur_x][t]][c]==0 {
+                                b_problem = true;
+                                break;
+                            }
+                        
+                            if !part_b_filled_arr[cur_x][t] {
+                                let p_idx = pairs_inv_map.get(&(cur_x, t)).expect("no inv index");
+                                let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                                let mut b_found = false;
+                                for s in cand_set {
+                                    if qord2[*s][c] == 1 {
+                                        b_found = true;
+                                        break;
+                                    }
+                                }
+                                if !b_found {
+                                    b_problem = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if qord2[cur_y][t] == 1 {
+                            if part_b_filled_arr[cur_x][t] && qord2[c][part_falg[cur_x][t]]==0 {
+                                b_problem = true;
+                                break;
+                            }
+                        
+                            if !part_b_filled_arr[cur_x][t] {
+                                let p_idx = pairs_inv_map.get(&(cur_x, t)).expect("no inv index");
+                                let cand_set = cands_map.get(&p_idx).expect("no cands entry");
+                                let mut b_found = false;
+                                for s in cand_set {
+                                    if qord2[c][*s] == 1 {
+                                        b_found = true;
+                                        break;
+                                    }
+                                }
+                                if !b_found {
+                                    b_problem = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                }
+                
+                if b_problem {
+                    continue;
+                }
+                
+
+
+                part_falg[cur_x][cur_y] = c;
+                part_b_filled_arr[cur_x][cur_y] = true;
+                let mut b_error = false;
+                for (&k,&v) in to_fill_map.iter() {
+                    if !part_b_filled_arr[k.0][k.1] {
+                        part_falg[k.0][k.1] = v;
+                        part_b_filled_arr[k.0][k.1] = true;
+                    }
+                    else {
+                        if part_falg[k.0][k.1] != v {
+                            b_error = true;
+                            break;
+                        }
+
+                    }
+                }
+                if b_error {
+                    continue; 
+                }
+                falg_fill_missing_v3_writer(out_writer, cur_idx + 1, key_arr, cands_map, pairs_map, pairs_inv_map, qord1, qord2, part_falg, part_b_filled_arr);
+                part_falg[cur_x][cur_y] = 0;
+                part_b_filled_arr[cur_x][cur_y] = false;
+                for (k,v) in to_fill_map {
+                    if part_b_filled_arr[k.0][k.1] {
+                        part_falg[k.0][k.1] = 0;
+                        part_b_filled_arr[k.0][k.1] = false;
+                    }
+                }
+            }
+        }
+        else {
+            falg_fill_missing_v3_writer(out_writer, cur_idx + 1, key_arr, cands_map, pairs_map, pairs_inv_map, qord1, qord2, part_falg, part_b_filled_arr);
+        }
+    }
+
+}
+
 
 
 
