@@ -1781,7 +1781,7 @@ pub fn falg_generate_with_qords(qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>
     true
 }
 
-pub fn falg_generate_with_qords_writer(out_writer: &mut std::fs::File, qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>) -> bool {
+pub fn falg_generate_with_qords_writer(out_writer: &mut &std::fs::File, qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>) -> bool {
     let n = qord1.len();
     let mut falg = falg_init(n);
     let mut b_filled_arr = Vec::<Vec<bool>>::new();
@@ -2387,7 +2387,7 @@ pub fn falg_fill_missing_v3(cur_idx:usize, key_arr: &Vec<usize>, cands_map: &Has
 
 }
 
-pub fn falg_fill_missing_v3_writer(out_writer: &mut std::fs::File, cur_idx:usize, key_arr: &Vec<usize>, cands_map: &HashMap<usize, HashSet<usize>>, pairs_map: &HashMap<usize, (usize, usize)>, pairs_inv_map: &HashMap<(usize, usize), usize>, qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>, part_falg: &mut Vec<Vec<usize>>, part_b_filled_arr: &mut Vec<Vec<bool>>) {
+pub fn falg_fill_missing_v3_writer(out_writer: &mut &std::fs::File, cur_idx:usize, key_arr: &Vec<usize>, cands_map: &HashMap<usize, HashSet<usize>>, pairs_map: &HashMap<usize, (usize, usize)>, pairs_inv_map: &HashMap<(usize, usize), usize>, qord1: &Vec<Vec<usize>>, qord2: &Vec<Vec<usize>>, part_falg: &mut Vec<Vec<usize>>, part_b_filled_arr: &mut Vec<Vec<bool>>) {
     if cur_idx == cands_map.len() {
         // test conditions for falg
         if falg_all_tests_no_print(part_falg) {
