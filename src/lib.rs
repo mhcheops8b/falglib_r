@@ -1400,6 +1400,8 @@ fn rel_pair_az_relation(rel1: &Vec<Vec<usize>>, rel2: &Vec<Vec<usize>>, x: usize
     false
 }
 
+
+
 pub fn rel_count_strict_minimal_elements(qord: &Vec<Vec<usize>>) -> usize {
     let n = qord.len();
     let mut min_count= 0usize;
@@ -1417,6 +1419,29 @@ pub fn rel_count_strict_minimal_elements(qord: &Vec<Vec<usize>>) -> usize {
     }
     min_count
 }
+
+// quick check for rel_count_strict_minimal_elements, if >= 2 false, else true
+pub fn rel_strict_minimal_elements_le_one(qord: &Vec<Vec<usize>>) -> bool {
+    let n = qord.len();
+    let mut min_count= 0usize;
+    for x in 0..n {
+        if min_count > 1 {
+            return false;
+        }
+        let mut bfound = false;
+        for t in 0..n {
+            if t != x && qord[t][x] == 1 {
+                bfound=true;
+                break;
+            }
+        }
+        if !bfound {
+            min_count+=1;
+        }
+    }
+    true
+}
+
 
 fn rel_pair_has_candidates_check_pair(qord1:&Vec<Vec<usize>>, qord2:&Vec<Vec<usize>>, x: usize, y:usize) -> bool {
     // x <=_1 y -> (x,y) = x or y <=_2 x (x,y) = y
