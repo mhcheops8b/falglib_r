@@ -1420,6 +1420,69 @@ pub fn rel_count_strict_minimal_elements(qord: &Vec<Vec<usize>>) -> usize {
     min_count
 }
 
+pub fn rel_is_equiv(qord:&Vec<Vec<usize>>, x: usize, y:usize) -> bool {
+    qord[x][y] == 1 && qord[y][x]==1
+}
+
+
+// minimal classes
+pub fn rel_count_strict_minimal_classes(qord: &Vec<Vec<usize>>) -> usize {
+    let n = qord.len();
+    let mut min_cls_count= 0usize;
+    let mut min_cands_set:HashSet<usize> = HashSet::new();
+    for x in 0..n {
+        let mut bfound = false;
+        for t in 0..n {
+            if t != x && qord[t][x] == 1 && qord[x][t] == 0 {
+                bfound=true;
+                break;
+            }
+        }
+        if !bfound {
+            let mut b_already_repr = false;
+            for t in &min_cands_set {
+                if rel_is_equiv(qord, *t, x) {
+                    b_already_repr = true;
+                }
+            }
+            if !b_already_repr {
+                min_cands_set.insert(x);
+            }
+        }
+    }
+    min_cands_set.len()
+}
+
+// minimal classes
+pub fn rel_strict_minimal_classes_le_one(qord: &Vec<Vec<usize>>) -> bool {
+    let n = qord.len();
+    let mut min_cands_set:HashSet<usize> = HashSet::new();
+    for x in 0..n {
+        let mut bfound = false;
+        for t in 0..n {
+            if t != x && qord[t][x] == 1 && qord[x][t] == 0 {
+                bfound=true;
+                break;
+            }
+        }
+        if !bfound {
+            let mut b_already_repr = false;
+            for t in &min_cands_set {
+                if rel_is_equiv(qord, *t, x) {
+                    b_already_repr = true;
+                }
+            }
+            if !b_already_repr {
+                min_cands_set.insert(x);
+            }
+            if min_cands_set.len() > 1 {
+                return false;
+            }
+        }
+    }
+    true
+}
+
 // quick check for rel_count_strict_minimal_elements, if >= 2 false, else true
 pub fn rel_strict_minimal_elements_le_one(qord: &Vec<Vec<usize>>) -> bool {
     let n = qord.len();
