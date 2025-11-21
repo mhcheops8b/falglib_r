@@ -1490,7 +1490,38 @@ pub fn rel_get_strict_minimal_classes(qord: &Vec<Vec<usize>>) -> (HashSet<usize>
     (min_cands_set, min_cands_map)
 }
 
+pub fn rel_get_strict_minimal_classes2(qord: &Vec<Vec<usize>>) -> (HashSet<usize>, HashMap<usize,HashSet<usize>>) {
+    let n = qord.len();
+    let mut min_cls_count= 0usize;
+    let mut min_cands_set:HashSet<usize> = HashSet::new();
+    let mut min_cands_map:HashMap<usize,HashSet<usize>> = HashMap::new();
+    for x in 0..n {
+        let mut bfound = false;
+        for t in 0..n {
+            if t != x && qord[t][x] == 1 && qord[x][t] == 0 {
+                bfound=true;
+                break;
+            }
+        }
+        if !bfound {
+            let mut b_already_repr = false;
+            for t in &min_cands_set {
+                if rel_is_equiv(qord, *t, x) {
+                    b_already_repr = true;
 
+                    if let Some(val) = min_cands_map.get_mut(t) {
+                        val.insert(x);
+                    }
+                }
+            }
+            if !b_already_repr {
+                min_cands_set.insert(x);
+                min_cands_map.insert(x, HashSet::from([x]));
+            }
+        }
+    }
+    (min_cands_set, min_cands_map)
+}
 
 // minimal classes
 pub fn rel_strict_minimal_classes_le_one(qord: &Vec<Vec<usize>>) -> bool {
