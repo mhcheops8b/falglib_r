@@ -1424,6 +1424,140 @@ pub fn rel_is_equiv(qord:&Vec<Vec<usize>>, x: usize, y:usize) -> bool {
     qord[x][y] == 1 && qord[y][x]==1
 }
 
+pub fn rel_get_classes_map(qord:&Vec<Vec<usize>>) -> HashMap<usize, Vec<usize>> {
+    let n = qord.len();
+
+    let mut b_has_class_vec = Vec::<bool>::new();
+    let mut id_to_cls_vec_map = HashMap::<usize, Vec<usize>>::new();
+    for i in 0..n {
+        b_has_class_vec.push(false);
+    }
+
+    let mut last_class_id = 0usize;
+    for x in 0..n {
+        if !b_has_class_vec[x] {
+            last_class_id +=1;
+            id_to_cls_vec_map.insert(last_class_id, Vec::from([x]));
+
+            for y in (x+1)..n {
+                if rel_is_equiv(qord, x, y) {
+                    b_has_class_vec[y] = true;
+                    id_to_cls_vec_map.get_mut(&last_class_id).unwrap().push(y);
+
+                }
+            }
+        }
+    }
+    id_to_cls_vec_map 
+}
+
+fn rel_get_classes_cover_rel(qord:&Vec<Vec<usize>>, cls_map:&HashMap<usize, Vec<usize>>) -> Vec<Vec<usize>> {
+    let n = cls_map.len();
+
+    let mut vec_res = Vec::<Vec<usize>>::new();
+    for i in 0..n {
+        vec_res.push(Vec::<usize>::new());
+        for _ in 0..n {
+            vec_res[i].push(0);
+        }
+
+    }
+
+    for i in 1..=n {
+        for j in 1..=n {
+            if i != j {
+                let x_i = cls_map.get(&i).unwrap()[0];
+                let x_j = cls_map.get(&j).unwrap()[0];
+                if qord[x_i][x_j] == 1 {
+                    let mut b_found = false;
+                    for k in 1..=n {
+                        if k != i && k != j {
+                            let x_k = cls_map.get(&k).unwrap()[0];
+                            if qord[x_i][x_k] == 1 && qord[x_k][x_j] == 1 {
+                                b_found = true;
+                                break;
+                            }
+                        }
+                    }
+                    if !b_found {
+                        vec_res[i-1][j-1] = 1;
+                    }
+                }
+            }
+        }
+    }
+    vec_res
+}
+
+pub fn cov_rel_get_class_coords(cov_rel: &Vec<Vec<usize>>) -> Vec<(usize,usize)> {
+    let n = cov_rel.len();
+
+    let mut max_levels = Vec::<usize>::new();
+    let mut x_coords = Vec::<usize>::new();
+    let mut last_x_coord = Vec::<usize>::new();
+    for _ in 0..n {
+        max_levels.push(0);
+        x_coords.push(0);
+        last_x_coord.push(0);
+    }
+
+    for i in 0..n {
+        if max_levels[i] == 0 {
+            max_levels[i] = 1;
+      //      x_coords[i] = 
+        }
+        for j in 0..n {
+            if cov_rel[i][j] == 1 {
+                max_levels[j] = std::cmp::max(max_levels[j], max_levels[i] + 1);
+            }
+        }
+    }
+    //println!("{:?}", max_levels);
+    for j in 0..n {
+        last_x_coord[max_levels[j] - 1] +=1;
+        x_coords[j] = last_x_coord[max_levels[j] - 1]; 
+    }
+    //println!("{:?}", x_coords);
+    let iter = std::iter::zip(x_coords,max_levels);
+    let v:Vec<_> = iter.map(|(a,b)| (a-1,b-1)).collect();
+
+    v
+}
+
+pub fn _rel_qord_print_tikz(cls_map: &HashMap<usize, Vec<usize>>, cov_rel: &Vec<Vec<usize>>, cls_coords: &Vec<(usize, usize)>) {
+    println!("\\tikz {{");
+    for i in 1..=cov_rel.len() {
+        print!("\\node [circle,fill,label={{[name=cls{}]below:$", i);
+        let mut b_first = true;
+        for e in &cls_map[&i] {
+            if b_first {
+                b_first = false;
+            }
+            else {
+                print!(", ");
+            }
+            print!("{}", e);
+        }
+            
+        println!("$}}] at {:?} {{}};", cls_coords[i-1]);
+    }
+    for i in 0..cov_rel.len() {
+        for j in 0..cov_rel.len() {
+            if cov_rel[i][j] == 1 {
+                println!("\\draw {:?} -- {:?};", cls_coords[i], cls_coords[j]);
+            }
+        }
+    }
+    println!("}}");
+}
+
+pub fn rel_qord_print_tikz(qord: &Vec<Vec<usize>>) {//cls_map: &HashMap<usize, Vec<usize>>, cov_rel: &Vec<Vec<usize>>, cls_coords: &Vec<(usize, usize)>) {
+    let cls_map = rel_get_classes_map(&qord);
+    let cov_rel = rel_get_classes_cover_rel(&qord, &cls_map);
+    let cls_coords = cov_rel_get_class_coords(&cov_rel);
+    _rel_qord_print_tikz(&cls_map, &cov_rel, &cls_coords);
+}
+
 
 // minimal classes
 pub fn rel_count_strict_minimal_classes(qord: &Vec<Vec<usize>>) -> usize {
