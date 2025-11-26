@@ -1451,7 +1451,7 @@ pub fn rel_get_classes_map(qord:&Vec<Vec<usize>>) -> HashMap<usize, Vec<usize>> 
     id_to_cls_vec_map 
 }
 
-fn rel_get_classes_cover_rel(qord:&Vec<Vec<usize>>, cls_map:&HashMap<usize, Vec<usize>>) -> Vec<Vec<usize>> {
+pub fn rel_get_classes_cover_rel(qord:&Vec<Vec<usize>>, cls_map:&HashMap<usize, Vec<usize>>) -> Vec<Vec<usize>> {
     let n = cls_map.len();
 
     let mut vec_res = Vec::<Vec<usize>>::new();
