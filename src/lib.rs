@@ -1524,6 +1524,32 @@ pub fn cov_rel_get_class_coords(cov_rel: &Vec<Vec<usize>>) -> Vec<(usize,usize)>
     v
 }
 
+pub fn cov_rel_get_class_levels(cov_rel: &Vec<Vec<usize>>) -> Vec<usize> {
+    let n = cov_rel.len();
+
+    let mut max_levels = Vec::<usize>::new();
+    // let mut x_coords = Vec::<usize>::new();
+    // let mut last_x_coord = Vec::<usize>::new();
+    for _ in 0..n {
+        max_levels.push(0);
+        // x_coords.push(0);
+        // last_x_coord.push(0);
+    }
+
+    for i in 0..n {
+        if max_levels[i] == 0 {
+            max_levels[i] = 1;
+      //      x_coords[i] = 
+        }
+        for j in 0..n {
+            if cov_rel[i][j] == 1 {
+                max_levels[j] = std::cmp::max(max_levels[j], max_levels[i] + 1);
+            }
+        }
+    }
+    max_levels
+}
+
 pub fn cov_rel_get_class_coords_perm(cov_rel: &Vec<Vec<usize>>, perm: &Vec<usize>) -> Vec<(usize,usize)> {
     let n = cov_rel.len();
 
