@@ -1524,6 +1524,41 @@ pub fn cov_rel_get_class_coords(cov_rel: &Vec<Vec<usize>>) -> Vec<(usize,usize)>
     v
 }
 
+pub fn cov_rel_get_class_coords_perm(cov_rel: &Vec<Vec<usize>>, perm: &Vec<usize>) -> Vec<(usize,usize)> {
+    let n = cov_rel.len();
+
+    let mut max_levels = Vec::<usize>::new();
+    let mut x_coords = Vec::<usize>::new();
+    let mut last_x_coord = Vec::<usize>::new();
+    for _ in 0..n {
+        max_levels.push(0);
+        x_coords.push(0);
+        last_x_coord.push(0);
+    }
+
+    for i in 0..n {
+        if max_levels[i] == 0 {
+            max_levels[i] = 1;
+      //      x_coords[i] = 
+        }
+        for j in 0..n {
+            if cov_rel[i][j] == 1 {
+                max_levels[j] = std::cmp::max(max_levels[j], max_levels[i] + 1);
+            }
+        }
+    }
+    //println!("{:?}", max_levels);
+    for j in 0..n {
+        last_x_coord[max_levels[perm[j]] - 1] +=1;
+        x_coords[perm[j]] = last_x_coord[max_levels[perm[j]] - 1]; 
+    }
+    //println!("{:?}", x_coords);
+    let iter = std::iter::zip(x_coords,max_levels);
+    let v:Vec<_> = iter.map(|(a,b)| (a-1,b-1)).collect();
+
+    v
+}
+
 pub fn _rel_qord_print_tikz(cls_map: &HashMap<usize, Vec<usize>>, cov_rel: &Vec<Vec<usize>>, cls_coords: &Vec<(usize, usize)>) {
     println!("\\tikz {{");
     for i in 1..=cov_rel.len() {
@@ -3562,5 +3597,19 @@ mod tests {
             (bb1[4] == vec![vec![1,1,0],vec![0,1,0],vec![1,1,1]]) &&
             (bb1[5] == vec![vec![1,0,0],vec![1,1,0],vec![1,1,1]]);
         assert_eq!(cond, false);
+    }
+    
+    #[test]
+    fn test_cov_rel_get_class_coords_perm() {
+        let cov_rel = vec![vec![0,0,1,0,0,0,0],vec![0,0,0,1,1,0,0],vec![0,0,0,1,0,0,0],vec![0,0,0,0,0,1,0],vec![0,0,0,0,0,1,0],vec![0,0,0,0,0,0,1],vec![0,0,0,0,0,0,0]];
+
+        let coord1 = cov_rel_get_class_coords(&cov_rel);
+
+        assert_eq!(coord1, vec![(0,0), (1,0), (0,1), (0,2), (1,1), (0,3),(0,4)]);
+
+        let coord2 = cov_rel_get_class_coords_perm(&cov_rel,&vec![0,1,2,3,4,5,6]);
+        assert_eq!(coord1, coord2);
+        let coord3 = cov_rel_get_class_coords_perm(&cov_rel,&vec![2,1,0,3,4,5,6]);
+        assert_eq!(coord3, vec![(1,0), (0,0), (0,1), (0,2), (1,1), (0,3), (0,4)]);
     }
 }
