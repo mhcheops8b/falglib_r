@@ -1971,6 +1971,35 @@ pub fn falg_isomorphic_expand(falg: &Vec<Vec<usize>>) -> (HashSet<Vec<Vec<usize>
     (res, permiso)
 }
 
+pub fn falg_isomorphic_expand_just_algs(falg: &Vec<Vec<usize>>) -> HashSet<Vec<Vec<usize>>> {
+    let size = falg.len();
+    let mut perm = Vec::<usize>::new();
+    for i in 0..size {
+        perm.push(i);
+    }
+
+    let mut res: HashSet<Vec<Vec<usize>>> = HashSet::new();
+
+    let mut old_size =res.len();
+    loop {
+
+        let iso_image = falg_isomorphic_image(&falg, &perm);
+
+        res.insert(iso_image.clone());
+
+        if old_size != res.len() {
+            old_size = res.len();
+        }
+
+        if !permlib::next_perm(&mut perm, size) {
+            break;
+        }
+    }
+
+    res
+}
+
+
 pub fn falg_init(size: usize) -> Vec<Vec<usize>> {
     let mut falg_res = Vec::<Vec<usize>>::new();
 
