@@ -1036,7 +1036,7 @@ fn falg_is_commutative(falg: &Vec<Vec<usize>>) -> bool {
     true
 }
 
-fn falg_is_associative(falg: &Vec<Vec<usize>>) -> bool {
+pub fn falg_is_associative(falg: &Vec<Vec<usize>>) -> bool {
     let n = falg.len();
 
     for x in 0..n {
@@ -1820,7 +1820,7 @@ fn falg_test_cond_n1(falg: &Vec<Vec<usize>>) -> bool {
     true
 }
 
-fn falg_test_cond_n2(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_cond_n2(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for x in 0..n {
@@ -1843,7 +1843,7 @@ fn falg_test_cond_n2(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     false
 }
 
-fn falg_test_cond_n3(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_cond_n3(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for y in 0..n {
@@ -1866,7 +1866,7 @@ fn falg_test_cond_n3(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     false
 }
 
-fn falg_test_cond_n4(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_cond_n4(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for x in 0..n {
@@ -1896,7 +1896,7 @@ fn falg_test_cond_n4(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     false
 }
 
-fn falg_test_cond_n5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
+pub fn falg_test_cond_n5(falg: &Vec<Vec<usize>>, b_print: bool) -> bool {
     let n = falg.len();
 
     for z in 0..n {
