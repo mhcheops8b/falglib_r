@@ -1051,7 +1051,7 @@ pub fn falg_is_associative(falg: &Vec<Vec<usize>>) -> bool {
     true
 }
 
-fn falg_associativity_problems(falg: &Vec<Vec<usize>>) -> Vec<String> {
+pub fn falg_associativity_problems(falg: &Vec<Vec<usize>>) -> Vec<String> {
     let n = falg.len();
 
     let mut res:Vec<String> = Vec::new();
